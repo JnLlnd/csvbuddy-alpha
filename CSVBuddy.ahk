@@ -7,7 +7,7 @@ By jlalonde on AHK forum
 
 #NoEnv
 #SingleInstance force
-#Include <JLDev>
+#Include %A_ScriptDir%\..\ObjCSV\lib\JLDev.ahk
 #Include %A_ScriptDir%\..\ObjCSV\lib\ObjCSV.ahk
 
 EM_GETLINECOUNT = 0xBA
@@ -44,9 +44,9 @@ Gui, 1:Add, Button,	yp		x+5		vbtnHelpFieldDelimiter1 gButtonHelpFieldDelimiter1,
 Gui, 1:Add, Text,		yp		x+45	vlblFieldEncapsulator1, Field e&ncapsulator:
 Gui, 1:Add, Edit,		yp		x+5		vstrFieldEncapsulator1 gChangedFieldEncapsulator1 w20 limit1 center, `"
 Gui, 1:Add, Button,	yp		x+5		vbtnHelpEncapsulator1 gButtonHelpEncapsulator1, ?
-Gui, 1:Add, Checkbox,	yp		x+45	vblnMultiline1 checked, &Multi-line fields
+Gui, 1:Add, Checkbox,	yp		x+45	vblnMultiline1, &Multi-line fields
 Gui, 1:Add, Button,	yp		x+0		vbtnHelpMultiline1 gButtonHelpMultiline1, ?
-Gui, 1:Add, Button,	yp		x+5		vbtnLoadFile gButtonLoadFile, &Load
+Gui, 1:Add, Button,	yp		x+5		vbtnLoadFile gButtonLoadFile hidden, &Load
 
 Gui, 1:Tab, 2
 Gui, 1:Add, Text,		y+10	x10		vlblRenameFields w85 right, Ren&ame fields:
@@ -90,7 +90,7 @@ Gui, 1:Add, Text,		y+10	x10		vlblAboutText, CSV Buddy v0.1 ALPHA`nby Jean Lalond
 
 Gui, 1:Tab
 
-Gui, 1:Add, ListView, x10 r24 w200 vlvData -ReadOnly gListViewEvents
+Gui, 1:Add, ListView, x10 r24 w200 vlvData -ReadOnly NoSort gListViewEvents
 
 Gui, 1:Show, Autosize
 
@@ -172,9 +172,15 @@ loop
 		break
 }
 if FileExist(strFileToLoad)
+{
 	GuiControl, 1:Show, btnPreviewFile
+	GuiControl, 1:Show, btnLoadFile
+}
 else
+{
 	GuiControl, 1:Hide, btnPreviewFile
+	GuiControl, 1:Hide, btnLoadFile
+}
 return
 
 
@@ -253,7 +259,7 @@ return
 
 
 ButtonHelpMultiline1:
-Help("Multi-line Fields", "Most CSV files do not contain line breaks inside text field. But some do. For example, you can find multi-lines ""Notes"" fields in Google or Outlook contacts exported files.`n`nFor safety, this option is already checked (ON). If you are sure text fields in your CSV file do NOT contain line breaks, unselect this checkbox to turn this option OFF. This will improve loading performance.")
+Help("Multi-line Fields", "Most CSV files do not contain line breaks inside text field. But some do. For example, you can find multi-lines ""Notes"" fields in Google or Outlook contacts exported files.`n`nIf text fields in your CSV file contain line breaks, select this checkbox to turn this option ON. If not, keep it OFF since this will improve loading performance.")
 return
 
 
@@ -301,7 +307,7 @@ if !LV_GetCount()
 else
 {
 	gosub UpdateCurrentHeader
-	Help("Ready to edit","Your CSV file is loaded. You can review its content and sort rows by clicking on column headers (note that numeric sorting is not available yet).`n`nYou can use the ""2) Edit Columns"" tab to edit field names, select fields to keep or change fields order.`n`nWhen you will be ready, change to the ""3) Save CSV File"" tab to save all or selected rows in a new CSV file.")
+	Help("Ready to edit","Your CSV file is loaded. You can review its content and sort rows by clicking on column headers (note that numeric sorting is not available yet). Double-click on a row to edit a record.`n`nYou can use the ""2) Edit Columns"" tab to edit field names, select fields to keep or change fields order.`n`nWhen you will be ready, change to the ""3) Save CSV File"" tab to save all or selected rows in a new CSV file.")
 }
 obj := ; release object
 return
@@ -565,11 +571,23 @@ return
 
 
 
-; --------------------- GUI2 LISTVIEW EVENTS --------------------------
-
+; --------------------- LISTVIEW EVENTS --------------------------
 
 
 ListViewEvents:
+if (A_GuiEvent = "ColClick")
+{
+	intColNumber := A_EventInfo
+	Menu, SortMenu, Add, &Sort textual, SortText
+	Menu, SortMenu, Add, Sort &numeric (integer), SortInteger
+	Menu, SortMenu, Add, Sort numeric (&float), SortFloat
+	Menu, SortMenu, Add
+	Menu, SortMenu, Add, Sort descending &textual, SortDescText
+	Menu, SortMenu, Add, Sort &descending numeric (integer), SortDescInteger
+	Menu, SortMenu, Add, Sort descending numeric (f&loat), SortDescFloat
+	Menu, SortMenu, Show
+	; #### si text aligner à gauche
+}
 if (A_GuiEvent = "DoubleClick") or (A_GuiEvent = "R")
 {
 	intRowNumber := A_EventInfo
@@ -633,6 +651,25 @@ return
 
 
 
+SortText:
+SortInteger:
+SortFloat:
+SortDescText:
+SortDescInteger:
+SortDescFloat:
+StringReplace, strOption, A_ThisLabel, Sort, % "Sort "
+StringReplace, strOption, strOption, Sort Desc, % "SortDesc "
+LV_ModifyCol(intColNumber, strOption)
+if InStr(strOption, "Text")
+	LV_ModifyCol(intColNumber, "Left")
+Menu, SortMenu, Delete
+return
+
+
+
+; --------------------- GUI2  --------------------------
+
+
 ButtonSaveRecord:
 if (intRowNumber < 1)
 	###("Pas normal! intRowNumber: " . intRowNumber)
@@ -644,9 +681,11 @@ Goto, 2GuiClose
 return
 
 
+
 ButtonCancel:
 Goto, 2GuiClose
 return
+
 
 
 2GuiClose:
@@ -655,6 +694,28 @@ Gui, 1:-Disabled
 Gui, 2:Destroy
 WinActivate, ahk_id %intGui1WinID%
 return
+
+
+
+2GuiSize:  ; Expand or shrink the ListView in response to the user's resizing of the window.
+; ###("intNbFieldsOnScreen: " . intNbFieldsOnScreen . " / intWidthSize: " . intWidthSize)
+if A_EventInfo = 1  ; The window has been minimized.  No action needed.
+    return
+; MsgBox, A_GuiWidth: %A_GuiWidth% / intCol: %intCol%
+GuiControl, 2:Move, btnSaveRecord, % "X" . (A_GuiWidth - 100)
+GuiControl, 2:Move, btnCancel, % "X" . (A_GuiWidth - 50)
+if intCol > 1  ; The window has been minimized.  No action needed.
+    return
+intWidthSize := A_GuiWidth - 20
+Loop, %intNbFieldsOnScreen%
+{
+ 	GuiControl, 2:Move, strEdit%A_Index%, % "W" . intWidthSize
+}
+return
+
+
+
+; --------------------- OTHER PROCEDURES --------------------------
 
 
 
@@ -694,31 +755,7 @@ return
 
 
 
-
-
-2GuiSize:  ; Expand or shrink the ListView in response to the user's resizing of the window.
-; ###("intNbFieldsOnScreen: " . intNbFieldsOnScreen . " / intWidthSize: " . intWidthSize)
-if A_EventInfo = 1  ; The window has been minimized.  No action needed.
-    return
-; MsgBox, A_GuiWidth: %A_GuiWidth% / intCol: %intCol%
-GuiControl, 2:Move, btnSaveRecord, % "X" . (A_GuiWidth - 100)
-GuiControl, 2:Move, btnCancel, % "X" . (A_GuiWidth - 50)
-if intCol > 1  ; The window has been minimized.  No action needed.
-    return
-intWidthSize := A_GuiWidth - 20
-Loop, %intNbFieldsOnScreen%
-{
- 	GuiControl, 2:Move, strEdit%A_Index%, % "W" . intWidthSize
-}
-return
-
-
-
-; --------------------- OTHER COMMANDS --------------------------
-
-
-
-1GuiQuit:
+GuiClose:
 ExitApp
 
 
@@ -733,6 +770,9 @@ GuiControl, 1:, strSelectEscaped, %strEscapedCurrentHeader%
 GuiControl, 1:, strOrderEscaped, %strEscapedCurrentHeader%
 return
 
+
+
+; --------------------- FUNCTIONS --------------------------
 
 
 GetHeader(strFieldDelimiter, strFieldEncapsulator)
