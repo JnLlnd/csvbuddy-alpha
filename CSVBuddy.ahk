@@ -3,48 +3,6 @@
 Written using AutoHotkey_L v1.1.09.03 (http://l.autohotkey.net/)
 By jlalonde on AHK forum
 2013-08-16
-
-BUGS
-- (none known)
-
-À faire
-- si seulement 1 record slectionné, demander si 1 ou tous
-- ColClick pour changer le type de tri
-- Afficher bouton Load seulement si fichier sélectionné
-- multiline off par défaut, changer message du help
-- ajouter vous pouvez double cliquer dans texte après load
-
-Ideas for future releases:
-- Export to HTML
-- Export to fixed-width
-
-Shortcuts
----------
-Ltr	Tab	Label
-F	1	CSV &file to load:
-S	1	&Select
-H	1	CSV &Header: (scripted)
-P	1	&Preview
-G	1	&Get header from CSV file
-C	1	Set &CSV header
-D	1	Field &delimiter:
-N	1	Field e&ncapsulator:
-M	1	&Multi-line fields
-L	1	&Load
-A	2	Ren&ame fields:
-R	2	&Rename
-T	2	Selec&t fields:
-E	2	S&elect
-I	2	Order f&ields:
-O	2	&Order
-V	3	CS&V file to save
-W	3	Save &with header
-	3	Save without CSV header
-	3	Field delimiter:
-U	3	Field encaps&ulator:
-	3	Save multi-line
-	3	Save single-line
-
 */
 
 #NoEnv
@@ -331,7 +289,7 @@ if LV_GetCount("Column")
 	}
 }
 strCurrentHeader := StrUnEscape(strFileHeaderEscaped)
-; ObjCSV_CSV2Collection(strFilePath, ByRef strFieldNames [, blnHeader = true, blnMultiline = 1, intProgress = 0, strFieldDelimiter = ",", strFieldEncapsulator = """", strRecordDelimiter = "`n", strOmitChars = "`r"])
+; ObjCSV_CSV2Collection(strFilePath, ByRef strFieldNames [, blnHeader = true, blnMultiline = 1, blnProgress = 0, strFieldDelimiter = ",", strFieldEncapsulator = """", strRecordDelimiter = "`n", strOmitChars = "`r"])
 obj := ObjCSV_CSV2Collection(strFileToLoad, strCurrentHeader, radGetHeader, blnMultiline1, 1, StrConvertFieldDelimiter(strFieldDelimiter1), strFieldEncapsulator1)
 ; ObjCSV_Collection2ListView(objCollection [, strGuiID = "", strListViewID = "", strFieldOrder = "", strFieldDelimiter = ",", strEncapsulator = """", strSortFields = "", strSortOptions = "", blnProgress = "0"])
 ObjCSV_Collection2ListView(obj, "1", "lvData", strCurrentHeader, StrConvertFieldDelimiter(strFieldDelimiter1), strFieldEncapsulator1, , , 1)
@@ -560,7 +518,15 @@ if FileExist(strFileToSave)
 		blnOverwrite := False
 	IfMsgBox, Cancel
 		return
-}	
+}
+if (LV_GetCount("Selected") = 1)
+{
+	MsgBox, 35, %strApplicationName% - One record selected, Only one record is selected. Do you want to save only this record?`n`nYes: Only one record will be saved.`nNo: All records will be saved.
+	IfMsgBox, No
+		LV_Modify(0, "Select") ; select all records
+	IfMsgBox, Cancel
+		return
+}
 obj := ObjCSV_ListView2Collection("1", "lvData", , , , 1)
 if (radSaveMultiline)
 	strEol := ""
