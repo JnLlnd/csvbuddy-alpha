@@ -1,8 +1,8 @@
 ;===============================================
 /* CSV Buddy v0.1
-Written using AutoHotkey_L v1.1.09.03 (http://l.autohotkey.net/)
-By jlalonde on AHK forum
-2013-08-16
+Written using AutoHotkey_L v1.1.09.03+ (http://l.autohotkey.net/)
+By JnLlnd on AHK forum
+2013-08-27
 */
 
 #NoEnv
@@ -28,74 +28,71 @@ Gui, 1:Font
 Gui, 1:Tab, 1
 Gui, 1:Add, Text,		y+10	x10		vlblCSVFileToLoad w85 right, CSV &file to load:
 Gui, 1:Add, Edit,		yp		x100	vstrFileToLoad disabled gChangedFileToLoad
-Gui, 1:Add, Button,	yp		x+5		vbtnHelpFileToLoad gButtonHelpFileToLoad, ?
-Gui, 1:Add, Button,	yp		x+5		vbtnSelectFileToLoad gButtonSelectFileToLoad default, &Select
+Gui, 1:Add, Button,		yp		x+5		vbtnHelpFileToLoad gButtonHelpFileToLoad, ?
+Gui, 1:Add, Button,		yp		x+5		vbtnSelectFileToLoad gButtonSelectFileToLoad default, &Select
 GuiControl, 1:Focus, btnSelectFileToLoad
 Gui, 1:Add, Text,		y+10	x10 	vlblHeader w85 right, CSV file &Header:
 Gui, 1:Add, Edit,		yp		x100	vstrFileHeaderEscaped disabled
-Gui, 1:Add, Button,	yp		x+5		vbtnHelpHeader gButtonHelpHeader, ?
-Gui, 1:Add, Button,	yp		x+5		vbtnPreviewFile gButtonPreviewFile hidden, &Preview
-Gui, 1:Add, Radio,	y+10	x100	vradGetHeader gClickRadGetHeader checked, &Get header from CSV file
-Gui, 1:Add, Radio,	yp		x+5		vradSetHeader gClickRadSetHeader, Set &CSV header
-Gui, 1:Add, Button,	yp		x+0		vbtnHelpSetHeader gButtonHelpSetHeader, ?
+Gui, 1:Add, Button,		yp		x+5		vbtnHelpHeader gButtonHelpHeader, ?
+Gui, 1:Add, Button,		yp		x+5		vbtnPreviewFile gButtonPreviewFile hidden, &Preview
+Gui, 1:Add, Radio,		y+10	x100	vradGetHeader gClickRadGetHeader checked, &Get header from CSV file
+Gui, 1:Add, Radio,		yp		x+5		vradSetHeader gClickRadSetHeader, Set &CSV header
+Gui, 1:Add, Button,		yp		x+0		vbtnHelpSetHeader gButtonHelpSetHeader, ?
 Gui, 1:Add, Text,		xp		x+45	vlblFieldDelimiter1, Field &delimiter:
 Gui, 1:Add, Edit,		yp		x+5		vstrFieldDelimiter1 gChangedFieldDelimiter1 w20 limit1 center, `, 
-Gui, 1:Add, Button,	yp		x+5		vbtnHelpFieldDelimiter1 gButtonHelpFieldDelimiter1, ?
+Gui, 1:Add, Button,		yp		x+5		vbtnHelpFieldDelimiter1 gButtonHelpFieldDelimiter1, ?
 Gui, 1:Add, Text,		yp		x+45	vlblFieldEncapsulator1, Field e&ncapsulator:
 Gui, 1:Add, Edit,		yp		x+5		vstrFieldEncapsulator1 gChangedFieldEncapsulator1 w20 limit1 center, `"
-Gui, 1:Add, Button,	yp		x+5		vbtnHelpEncapsulator1 gButtonHelpEncapsulator1, ?
+Gui, 1:Add, Button,		yp		x+5		vbtnHelpEncapsulator1 gButtonHelpEncapsulator1, ?
 Gui, 1:Add, Checkbox,	yp		x+45	vblnMultiline1, &Multi-line fields
-Gui, 1:Add, Button,	yp		x+0		vbtnHelpMultiline1 gButtonHelpMultiline1, ?
-Gui, 1:Add, Button,	yp		x+5		vbtnLoadFile gButtonLoadFile hidden, &Load
+Gui, 1:Add, Button,		yp		x+0		vbtnHelpMultiline1 gButtonHelpMultiline1, ?
+Gui, 1:Add, Button,		yp		x+5		vbtnLoadFile gButtonLoadFile hidden, &Load
 
 Gui, 1:Tab, 2
 Gui, 1:Add, Text,		y+10	x10		vlblRenameFields w85 right, Ren&ame fields:
 Gui, 1:Add, Edit,		yp		x100	vstrRenameEscaped
-Gui, 1:Add, Button,	yp		x+0		vbtnSetRename gButtonSetRename, &Rename
-Gui, 1:Add, Button,	yp		x+5		vbtnHelpRename gButtonHelpRename, ?
+Gui, 1:Add, Button,		yp		x+0		vbtnSetRename gButtonSetRename, &Rename
+Gui, 1:Add, Button,		yp		x+5		vbtnHelpRename gButtonHelpRename, ?
 Gui, 1:Add, Text,		y+10	x10		vlblSelectFields w85 right, Selec&t fields:
 Gui, 1:Add, Edit,		yp		x100	vstrSelectEscaped
-Gui, 1:Add, Button,	yp		x+0		vbtnSetSelect gButtonSetSelect, S&elect
-Gui, 1:Add, Button,	yp		x+5		vbtnHelpSelect gButtonHelpSelect, ?
+Gui, 1:Add, Button,		yp		x+0		vbtnSetSelect gButtonSetSelect, S&elect
+Gui, 1:Add, Button,		yp		x+5		vbtnHelpSelect gButtonHelpSelect, ?
 Gui, 1:Add, Text,		y+10	x10		vlblOrderFields w85 right, Order f&ields:
 Gui, 1:Add, Edit,		yp		x100	vstrOrderEscaped
-Gui, 1:Add, Button,	yp		x+0		vbtnSetOrder gButtonSetOrder, &Order
-Gui, 1:Add, Button,	yp		x+5		vbtnHelpOrder gButtonHelpOrder, ?
+Gui, 1:Add, Button,		yp		x+0		vbtnSetOrder gButtonSetOrder, &Order
+Gui, 1:Add, Button,		yp		x+5		vbtnHelpOrder gButtonHelpOrder, ?
 
 Gui, 1:Tab, 3
 Gui, 1:Add, Text,		y+10	x10		vlblCSVFileToSave w85 right, CS&V file to save:
 Gui, 1:Add, Edit,		yp		x100	vstrFileToSave gChangedFileToSave
-Gui, 1:Add, Button,	yp		x+5		vbtnHelpFileToSave gButtonHelpFileToSave, ?
-Gui, 1:Add, Button,	yp		x+5		vbtnSelectFileToSave gButtonSelectFileToSave default, &Select
+Gui, 1:Add, Button,		yp		x+5		vbtnHelpFileToSave gButtonHelpFileToSave, ?
+Gui, 1:Add, Button,		yp		x+5		vbtnSelectFileToSave gButtonSelectFileToSave default, &Select
 GuiControl, 1:Focus, btnSelectFileToSave
 Gui, 1:Add, Text,		y+10	x100	vlblFieldDelimiter3, Field delimiter:
 Gui, 1:Add, Edit,		yp		x200	vstrFieldDelimiter3 w20 limit1 center, `, 
-Gui, 1:Add, Button,	yp		x+5		vbtnHelpFieldDelimiter3 gButtonHelpFieldDelimiter3, ?
+Gui, 1:Add, Button,		yp		x+5		vbtnHelpFieldDelimiter3 gButtonHelpFieldDelimiter3, ?
 Gui, 1:Add, Text,		y+10	x100	vlblFieldEncapsulator3, Field encaps&ulator:
 Gui, 1:Add, Edit,		yp		x200	vstrFieldEncapsulator3 w20 limit1 center, `"
-Gui, 1:Add, Button,	yp		x+5		vbtnHelpEncapsulator3 gButtonHelpEncapsulator3, ?
-Gui, 1:Add, Radio,	y100	x300	vradSaveWithHeader checked, Save &with CSV header
-Gui, 1:Add, Radio,	y+10	x300	vradSaveNoHeader, Save without CSV header
-Gui, 1:Add, Button,	y100	x450	vbtnHelpSaveHeader gButtonHelpSaveHeader, ?
-Gui, 1:Add, Radio,	y100	x500	vradSaveMultiline gClickRadSaveMultiline checked, Save multi-line
-Gui, 1:Add, Radio,	y+10	x500	vradSaveSingleline gClickRadSaveSingleline, Save single-line
-Gui, 1:Add, Button,	y100	x620	vbtnHelpMultiline gButtonHelpSaveMultiline, ?
+Gui, 1:Add, Button,		yp		x+5		vbtnHelpEncapsulator3 gButtonHelpEncapsulator3, ?
+Gui, 1:Add, Radio,		y100	x300	vradSaveWithHeader checked, Save &with CSV header
+Gui, 1:Add, Radio,		y+10	x300	vradSaveNoHeader, Save without CSV header
+Gui, 1:Add, Button,		y100	x450	vbtnHelpSaveHeader gButtonHelpSaveHeader, ?
+Gui, 1:Add, Radio,		y100	x500	vradSaveMultiline gClickRadSaveMultiline checked, Save multi-line
+Gui, 1:Add, Radio,		y+10	x500	vradSaveSingleline gClickRadSaveSingleline, Save single-line
+Gui, 1:Add, Button,		y100	x620	vbtnHelpMultiline gButtonHelpSaveMultiline, ?
 Gui, 1:Add, Text,		y+25	x500	vlblEndoflineReplacement hidden, End-of-line replacement:
 Gui, 1:Add, Edit,		yp		x620	vstrEndoflineReplacement hidden w50 center, % chr(182)
-Gui, 1:Add, Button,	y105	x+5		vbtnSaveFile gButtonSaveFile, Save
-Gui, 1:Add, Button,	y137	x+5		vbtnCheckFile hidden gButtonCheckFile, Check
+Gui, 1:Add, Button,		y105	x+5		vbtnSaveFile gButtonSaveFile, Save
+Gui, 1:Add, Button,		y137	x+5		vbtnCheckFile hidden gButtonCheckFile, Check
 
 Gui, 1:Tab, 4
-Gui, 1:Add, Text,		y+10	x10		vlblAboutText, CSV Buddy v0.1 ALPHA`nby Jean Lalonde (JnLlnd on AHK forum)`nAll rights reserved (c)2013 - DO NOT DISTRIBUTE WITHOUT AUTHOR AUTORIZATION`n`nUsing ObjCSV AHK_L library: www.github.com/JnLlnd/ObjCSV`nIcon: Visual Pharm - http://www.visualpharm.com
+Gui, 1:Add, Text,		y+10	x10		vlblAboutText, CSV Buddy v0.1 ALPHA (2013-08-27)`nby Jean Lalonde (JnLlnd on AHK forum)`nAll rights reserved (c)2013 - DO NOT DISTRIBUTE WITHOUT AUTHOR AUTORIZATION`n`nUsing ObjCSV AHK_L library: www.github.com/JnLlnd/ObjCSV`nIcon: Visual Pharm - http://www.visualpharm.com
 
 Gui, 1:Tab
 
-Gui, 1:Add, ListView, x10 r24 w200 vlvData -ReadOnly NoSort gListViewEvents
+Gui, 1:Add, ListView, 	x10 r24 w200 vlvData -ReadOnly NoSort gListViewEvents
 
 Gui, 1:Show, Autosize
-
-; ###
-; GuiControl, Choose, tabCSVBuddy, 3
 
 return
 
@@ -103,7 +100,7 @@ return
 
 ChangedTabCSVBuddy:
 Gui, 1:Submit, NoHide
-;  " 1) Load CSV File     ||     2) Edit Columns     |     3) Save CSV File     "
+;  " 1) Load CSV File     ||     2) Edit Columns     |     3) Save CSV File     |     About     "
 if InStr(tabCSVBuddy, "Load")
 	GuiControl, 1:+Default, btnSelectFileToLoad
 else if InStr(tabCSVBuddy, "Edit")
@@ -125,8 +122,6 @@ else if InStr(tabCSVBuddy, "Save")
 else if InStr(tabCSVBuddy, "About")
 {
 	; do nothing
-	; GuiControl, 1:+Default, ###
-	; ###(tabCSVBuddy)
 }
 else
 	###(tabCSVBuddy . " !?!")
@@ -159,6 +154,7 @@ if (radGetHeader) or !(StrLen(strFileHeaderEscaped))
 GuiControl, 1:+Default, btnLoadFile
 GuiControl, 1:Focus, btnLoadFile
 return
+
 
 
 ChangedFileToLoad:
@@ -376,13 +372,11 @@ Loop
 {
 	if (objCurrentHeader[intIndexCurrent] = objNewHeader[intIndexNew])
 	{
-		; ##(strCurrentHeader . "`n" . strNewHeader . "`n`n" . intIndexCurrent . " / " . intIndexNew . "`n`nobjCurrentHeader[intIndexCurrent] " . objCurrentHeader[intIndexCurrent] . " = objNewHeader[intIndexNew] " . objNewHeader[intIndexNew] . "`n`nConserver col")
 		intIndexCurrent := intIndexCurrent + 1
 		intIndexNew := intIndexNew + 1
 	}
 	else
 	{
-		; ##(strCurrentHeader . "`n" . strNewHeader . "`n`n" . intIndexCurrent . " / " . intIndexNew . "`n`nobjCurrentHeader[intIndexCurrent] " . objCurrentHeader[intIndexCurrent] . " <> objNewHeader[intIndexNew] " . objNewHeader[intIndexNew] . "`n`nSUPPRIMER col")
 		LV_DeleteCol(intIndexCurrent - intDeleted)
 		intDeleted := intDeleted + 1
 		intIndexCurrent := intIndexCurrent + 1
@@ -570,6 +564,7 @@ return
 
 ; --------------------- LISTVIEW EVENTS --------------------------
 
+
 ListViewEvents:
 if (A_GuiEvent = "ColClick")
 {
@@ -704,7 +699,6 @@ return
 
 
 
-
 ; --------------------- GUI2  --------------------------
 
 
@@ -756,7 +750,6 @@ return
 ; --------------------- OTHER PROCEDURES --------------------------
 
 
-
 GuiSize: ; Expand or shrink the ListView in response to the user's resizing of the window.
 if A_EventInfo = 1  ; The window has been minimized.  No action needed.
     return
@@ -793,11 +786,6 @@ return
 
 
 
-GuiClose:
-ExitApp
-
-
-
 UpdateCurrentHeader:
 Gui, 1:Submit, NoHide
 strCurrentHeader := GetHeader(strFieldDelimiter1, strFieldEncapsulator1)
@@ -807,6 +795,11 @@ GuiControl, 1:, strRenameEscaped, %strEscapedCurrentHeader%
 GuiControl, 1:, strSelectEscaped, %strEscapedCurrentHeader%
 GuiControl, 1:, strOrderEscaped, %strEscapedCurrentHeader%
 return
+
+
+
+GuiClose:
+ExitApp
 
 
 
@@ -825,39 +818,6 @@ GetHeader(strFieldDelimiter, strFieldEncapsulator)
 	StringTrimRight, strHeader, strHeader, 1 ; remove extra delimiter
 	return strHeader
 }
-
-
-
-/*
-SetSelectColumn(strCurrentHeader, strNewHeader, strDelimiter, strEncapsulator)
-{
-	objCurrentHeader := ReturnDSVObjectArray(strCurrentHeader, strDelimiter, strEncapsulator)
-	objNewHeader := ReturnDSVObjectArray(strNewHeader, strDelimiter, strEncapsulator)
-	intMaxCurrent := objCurrentHeader.MaxIndex()
-	intMaxNew := objNewHeader.MaxIndex()
-	intIndexCurrent := 1
-	intIndexNew := 1
-	intDeleted := 0
-	Loop
-	{
-		if (objCurrentHeader[intIndexCurrent] = objNewHeader[intIndexNew])
-		{
-			; ###(strCurrentHeader . "`n" . strNewHeader . "`n`n" . intIndexCurrent . " / " . intIndexNew . "`n`nobjCurrentHeader[intIndexCurrent] " . objCurrentHeader[intIndexCurrent] . " = objNewHeader[intIndexNew] " . objNewHeader[intIndexNew] . "`n`nConserver col")
-			intIndexCurrent := intIndexCurrent + 1
-			intIndexNew := intIndexNew + 1
-		}
-		else
-		{
-			; ###(strCurrentHeader . "`n" . strNewHeader . "`n`n" . intIndexCurrent . " / " . intIndexNew . "`n`nobjCurrentHeader[intIndexCurrent] " . objCurrentHeader[intIndexCurrent] . " <> objNewHeader[intIndexNew] " . objNewHeader[intIndexNew] . "`n`nSUPPRIMER col")
-			LV_DeleteCol(intIndexCurrent - intDeleted)
-			intDeleted := intDeleted + 1
-			intIndexCurrent := intIndexCurrent + 1
-		}
-		if (intIndexCurrent > intMaxCurrent)
-			break
-	}
-}
-*/
 
 
 
