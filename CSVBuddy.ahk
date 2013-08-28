@@ -1,19 +1,21 @@
 ;===============================================
-/* CSV Buddy v0.1
+/* CSV Buddy v0.1 (2013-08-27)
 Written using AutoHotkey_L v1.1.09.03+ (http://l.autohotkey.net/)
 By JnLlnd on AHK forum
-2013-08-27
-*/
+This script uses the library ObjCSV (https://github.com/JnLlnd/ObjCSV)
+*/ 
 
 #NoEnv
 #SingleInstance force
 #Include %A_ScriptDir%\..\ObjCSV\lib\JLDev.ahk
 #Include %A_ScriptDir%\..\ObjCSV\lib\ObjCSV.ahk
 
-EM_GETLINECOUNT = 0xBA
-
 global strApplicationName := "CSV Buddy"
 global strApplicationVersion := "0.1"
+
+
+
+; --------------------- GUI1 --------------------------
 
 
 Gui, 1:New, +Resize, %strApplicationName%
