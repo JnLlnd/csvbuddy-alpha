@@ -307,7 +307,7 @@ if !LV_GetCount()
 else
 {
 	gosub UpdateCurrentHeader
-	Help("Ready to edit","Your CSV file is loaded. You can review its content and sort rows by clicking on column headers (note that numeric sorting is not available yet). Double-click on a row to edit a record.`n`nYou can use the ""2) Edit Columns"" tab to edit field names, select fields to keep or change fields order.`n`nWhen you will be ready, change to the ""3) Save CSV File"" tab to save all or selected rows in a new CSV file.")
+	Help("Ready to edit","Your CSV file is loaded.`n`nYou can sort rows by clicking on column headers. Choose sorting type: alphabetical, numeric integer or numeric float, ascending or descending.`n`nDouble-click on a row to edit a record.  Right-click anywhere in the list view to select or deselect all rows.`n`nYou can use the ""2) Edit Columns"" tab to edit field names, select fields to keep or change fields order.`n`nWhen you will be ready, change to the ""3) Save CSV File"" tab to save all or selected rows in a new CSV file.")
 }
 obj := ; release object
 return
@@ -568,27 +568,22 @@ return
 
 
 
-
-
-
 ; --------------------- LISTVIEW EVENTS --------------------------
-
 
 ListViewEvents:
 if (A_GuiEvent = "ColClick")
 {
 	intColNumber := A_EventInfo
-	Menu, SortMenu, Add, &Sort textual, SortText
-	Menu, SortMenu, Add, Sort &numeric (integer), SortInteger
-	Menu, SortMenu, Add, Sort numeric (&float), SortFloat
+	Menu, SortMenu, Add, &Sort alphabetical, MenuSortText
+	Menu, SortMenu, Add, Sort &numeric (integer), MenuSortInteger
+	Menu, SortMenu, Add, Sort numeric (&float), MenuSortFloat
 	Menu, SortMenu, Add
-	Menu, SortMenu, Add, Sort descending &textual, SortDescText
-	Menu, SortMenu, Add, Sort &descending numeric (integer), SortDescInteger
-	Menu, SortMenu, Add, Sort descending numeric (f&loat), SortDescFloat
+	Menu, SortMenu, Add, Sort descending &alphabetical, MenuSortDescText
+	Menu, SortMenu, Add, Sort &descending numeric (integer), MenuSortDescInteger
+	Menu, SortMenu, Add, Sort descending numeric (f&loat), MenuSortDescFloat
 	Menu, SortMenu, Show
-	; #### si text aligner à gauche
 }
-if (A_GuiEvent = "DoubleClick") or (A_GuiEvent = "R")
+if (A_GuiEvent = "DoubleClick")
 {
 	intRowNumber := A_EventInfo
 	Gui, 1:Submit, NoHide
@@ -597,11 +592,9 @@ if (A_GuiEvent = "DoubleClick") or (A_GuiEvent = "R")
 	Gui, 2:+Owner1
 	Gui, 1:Default
 	SysGet, intMonWork, MonitorWorkArea 
-	; ###(intMonWorkRight)
 	intColWidth := 380
 	intEditWidth := intColWidth - 20
 	intMaxNbCol := Floor(intMonWorkRight / intColWidth)
-	; MsgBox, WorkArea: %intMonWorkRight% x %intMonWorkBottom%`nColonne: %intNbCol% de %intColWidth%
 	intX := 10
 	intY := 5
 	intCol := 1
@@ -623,19 +616,15 @@ if (A_GuiEvent = "DoubleClick") or (A_GuiEvent = "R")
 			intCol := intCol + 1
 			intX := intX + intColWidth
 			intY := 5
-			; ###("intCol: " . intCol . " / intMaxNbCol: " . intMaxNbCol)
 		}
 		intYLabel := intY
-		; ###(intYLabel)
 		intYEdit := intY + 15
-		; ###(A_Index . " " . intYLabel . " " . intYEdit . " " . intMonWorkBottom)
 		LV_GetText(strColHeader, 0, A_Index)
 		LV_GetText(strColData, intRowNumber, A_Index)
 		Gui, 2:Add, Text, y%intYLabel% x%intX% vstrLabel%A_Index%, %strColHeader%
 		Gui, 2:Add, Edit, y%intYEdit% x%intX% w%intEditWidth% vstrEdit%A_Index% +HwndstrEditHandle, %strColData%
 		ShrinkEditControl(strEditHandle, 2, "2")
 		GuiControlGet, intPosEdit, 2:Pos, %strEditHandle%
-		; ###("!" . intPosEditH)
 		intY := intY + intPosEditH + 19
 		intNbFieldsOnScreen := A_Index ; incremented at each occurence of the loop
 	}
@@ -651,19 +640,68 @@ return
 
 
 
-SortText:
-SortInteger:
-SortFloat:
-SortDescText:
-SortDescInteger:
-SortDescFloat:
-StringReplace, strOption, A_ThisLabel, Sort, % "Sort "
+MenuSortText:
+MenuSortInteger:
+MenuSortFloat:
+MenuSortDescText:
+MenuSortDescInteger:
+MenuSortDescFloat:
+StringReplace, strOption, A_ThisLabel, Menu,
+StringReplace, strOption, strOption, Sort, % "Sort "
 StringReplace, strOption, strOption, Sort Desc, % "SortDesc "
 LV_ModifyCol(intColNumber, strOption)
 if InStr(strOption, "Text")
 	LV_ModifyCol(intColNumber, "Left")
 Menu, SortMenu, Delete
 return
+
+
+
+GuiContextMenu:  ; Launched in response to a right-click or press of the Apps key.
+if A_GuiControl <> lvData  ; This check is optional. It displays the menu only for clicks inside the ListView.
+    return
+Menu, SelectMenu, Add, Select &All, MenuSelectAll
+Menu, SelectMenu, Add, D&eselect All, MenuSelectNone
+; Menu, SelectMenu, Add, &Reverse Select, MenuSelectReverse ; A FAIRE VOIR http://www.autohotkey.com/board/topic/96777-listview-rows-not-getting-blue-after-being-selected-with-lv-modify/
+; Show the menu at the provided coordinates, A_GuiX and A_GuiY.  These should be used
+; because they provide correct coordinates even if the user pressed the Apps key:
+Menu, SelectMenu, Show, %A_GuiX%, %A_GuiY%
+return
+
+
+
+MenuSelectAll:
+GuiControl, Focus, lvData
+LV_Modify(0, "Select")
+Menu, SelectMenu, Delete
+return
+
+
+
+MenuSelectNone:
+GuiControl, Focus, lvData
+LV_Modify(0, "-Select")
+Menu, SelectMenu, Delete
+return
+
+
+
+MenuSelectReverse: ; ### NE FONCTIONNE PAS
+/*
+GuiControl, Focus, lvData
+Loop, LV_Count("")
+{
+	ControlGet, ??? OutputVar, List, Options, SysListView321, WinTitle, WinText
+	blnIsChecked := (ErrorLevel >> 12) - 1  ; This sets blnIsChecked to true if row is checked or false otherwise
+	if blnIsChecked
+		LV_Modify(A_Index, "-Select")
+	else
+		LV_Modify(A_Index, "Select")
+}
+Menu, SelectMenu, Delete
+*/
+return
+
 
 
 
