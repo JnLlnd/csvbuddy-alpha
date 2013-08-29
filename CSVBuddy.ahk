@@ -1,5 +1,5 @@
 ;===============================================
-/* CSV Buddy v0.1 (2013-08-27)
+/* CSV Buddy v0.1.1 (2013-08-27)
 Written using AutoHotkey_L v1.1.09.03+ (http://l.autohotkey.net/)
 By JnLlnd on AHK forum
 This script uses the library ObjCSV (https://github.com/JnLlnd/ObjCSV)
@@ -7,7 +7,6 @@ This script uses the library ObjCSV (https://github.com/JnLlnd/ObjCSV)
 
 #NoEnv
 #SingleInstance force
-#Include %A_ScriptDir%\..\ObjCSV\lib\JLDev.ahk
 #Include %A_ScriptDir%\..\ObjCSV\lib\ObjCSV.ahk
 
 global strApplicationName := "CSV Buddy"
@@ -126,7 +125,7 @@ else if InStr(tabCSVBuddy, "About")
 	; do nothing
 }
 else
-	###(tabCSVBuddy . " !?!")
+	###_M(tabCSVBuddy . " !?!")
 return
 
 
@@ -659,7 +658,7 @@ if A_GuiControl <> lvData  ; This check is optional. It displays the menu only f
     return
 Menu, SelectMenu, Add, Select &All, MenuSelectAll
 Menu, SelectMenu, Add, D&eselect All, MenuSelectNone
-; Menu, SelectMenu, Add, &Reverse Select, MenuSelectReverse ; A FAIRE VOIR http://www.autohotkey.com/board/topic/96777-listview-rows-not-getting-blue-after-being-selected-with-lv-modify/
+Menu, SelectMenu, Add, &Reverse Selection, MenuSelectReverse
 ; Show the menu at the provided coordinates, A_GuiX and A_GuiY.  These should be used
 ; because they provide correct coordinates even if the user pressed the Apps key:
 Menu, SelectMenu, Show, %A_GuiX%, %A_GuiY%
@@ -683,21 +682,23 @@ return
 
 
 
-MenuSelectReverse: ; ### NE FONCTIONNE PAS
-/*
+MenuSelectReverse:
 GuiControl, Focus, lvData
-Loop, LV_Count("")
-{
-	ControlGet, ??? OutputVar, List, Options, SysListView321, WinTitle, WinText
-	blnIsChecked := (ErrorLevel >> 12) - 1  ; This sets blnIsChecked to true if row is checked or false otherwise
-	if blnIsChecked
+Loop, % LV_GetCount()
+	if IsRowSelected(A_Index)
 		LV_Modify(A_Index, "-Select")
 	else
 		LV_Modify(A_Index, "Select")
-}
 Menu, SelectMenu, Delete
-*/
 return
+
+
+
+IsRowSelected(intRow)
+{
+	intNextSelectedRow := LV_GetNext(intRow - 1)
+	return (intNextSelectedRow = intRow)
+}
 
 
 
@@ -706,7 +707,7 @@ return
 
 ButtonSaveRecord:
 if (intRowNumber < 1)
-	###("Pas normal! intRowNumber: " . intRowNumber)
+	###_M("Pas normal! intRowNumber: " . intRowNumber)
 Gui, 2:Submit
 Gui, 1:Default
 loop, % LV_GetCount("Column")
@@ -732,7 +733,7 @@ return
 
 
 2GuiSize:  ; Expand or shrink the ListView in response to the user's resizing of the window.
-; ###("intNbFieldsOnScreen: " . intNbFieldsOnScreen . " / intWidthSize: " . intWidthSize)
+; ###_M("intNbFieldsOnScreen: " . intNbFieldsOnScreen . " / intWidthSize: " . intWidthSize)
 if A_EventInfo = 1  ; The window has been minimized.  No action needed.
     return
 ; MsgBox, A_GuiWidth: %A_GuiWidth% / intCol: %intCol%
