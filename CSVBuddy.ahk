@@ -1,5 +1,6 @@
 ;===============================================
-/* CSV Buddy v0.1.1 (2013-08-27)
+/*
+CSV Buddy
 Written using AutoHotkey_L v1.1.09.03+ (http://l.autohotkey.net/)
 By JnLlnd on AHK forum
 This script uses the library ObjCSV (https://github.com/JnLlnd/ObjCSV)
@@ -10,7 +11,7 @@ This script uses the library ObjCSV (https://github.com/JnLlnd/ObjCSV)
 #Include %A_ScriptDir%\..\ObjCSV\lib\ObjCSV.ahk
 
 global strApplicationName := "CSV Buddy"
-global strApplicationVersion := "0.1"
+global strApplicationVersion := "v0.1.1 ALPHA"
 
 
 
@@ -87,7 +88,7 @@ Gui, 1:Add, Button,		y105	x+5		vbtnSaveFile gButtonSaveFile, Save
 Gui, 1:Add, Button,		y137	x+5		vbtnCheckFile hidden gButtonCheckFile, Check
 
 Gui, 1:Tab, 4
-Gui, 1:Add, Text,		y+10	x10		vlblAboutText, CSV Buddy v0.1 ALPHA (2013-08-27)`nby Jean Lalonde (JnLlnd on AHK forum)`nAll rights reserved (c)2013 - DO NOT DISTRIBUTE WITHOUT AUTHOR AUTORIZATION`n`nUsing ObjCSV AHK_L library: www.github.com/JnLlnd/ObjCSV`nIcon: Visual Pharm - http://www.visualpharm.com
+Gui, 1:Add, Link,		y+10	x10		vlblAboutText, <a href="https://bitbucket.org/JnLlnd/csvbuddy">%strApplicationName% %strApplicationVersion%</a>`nby Jean Lalonde (<a href="http://www.autohotkey.com/board/user/4880-jnllnd/">JnLlnd</a> on AHK forum)`nAll rights reserved (c)2013 - DO NOT DISTRIBUTE WITHOUT AUTHOR AUTORIZATION`n`nUsing AHK library: <a href="https://www.github.com/JnLlnd/ObjCSV">ObjCSV</a>`nUsing icon by: <a href="http://www.visualpharm.com">Visual Pharm</a>
 
 Gui, 1:Tab
 
@@ -864,7 +865,7 @@ StrConvertFieldDelimiter(strConverted)
 Help(strTitle, strMessage)
 {
 	Gui, 1:+OwnDialogs 
-	MsgBox, 0, %strApplicationName% (v%strApplicationVersion%) - %strTitle% Help,%strMessage%
+	MsgBox, 0, %strApplicationName% (%strApplicationVersion%) - %strTitle% Help,%strMessage%
 }
 
 
