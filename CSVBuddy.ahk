@@ -24,7 +24,7 @@ Gui, 1:Font, s12 w700, Verdana
 Gui, 1:Add, Text, x10, %strApplicationName%
 
 Gui, 1:Font, s10 w700, Verdana
-Gui, 1:Add, Tab2, w950 r4 vtabCSVBuddy gChangedTabCSVBuddy, % " 1) Load CSV File     ||     2) Edit Columns     |     3) Save CSV File     |     About     "
+Gui, 1:Add, Tab2, w950 r4 vtabCSVBuddy gChangedTabCSVBuddy, % " 1) Load CSV File     ||     2) Edit Columns     |     3) Save CSV File     |     4) Export     |     About     "
 Gui, 1:Font
 
 Gui, 1:Tab, 1
@@ -69,7 +69,6 @@ Gui, 1:Add, Text,		y+10	x10		vlblCSVFileToSave w85 right, CS&V file to save:
 Gui, 1:Add, Edit,		yp		x100	vstrFileToSave gChangedFileToSave
 Gui, 1:Add, Button,		yp		x+5		vbtnHelpFileToSave gButtonHelpFileToSave, ?
 Gui, 1:Add, Button,		yp		x+5		vbtnSelectFileToSave gButtonSelectFileToSave default, &Select
-GuiControl, 1:Focus, btnSelectFileToSave
 Gui, 1:Add, Text,		y+10	x100	vlblFieldDelimiter3, Field delimiter:
 Gui, 1:Add, Edit,		yp		x200	vstrFieldDelimiter3 w20 limit1 center, `, 
 Gui, 1:Add, Button,		yp		x+5		vbtnHelpFieldDelimiter3 gButtonHelpFieldDelimiter3, ?
@@ -88,6 +87,12 @@ Gui, 1:Add, Button,		y105	x+5		vbtnSaveFile gButtonSaveFile, Save
 Gui, 1:Add, Button,		y137	x+5		vbtnCheckFile hidden gButtonCheckFile, Check
 
 Gui, 1:Tab, 4
+Gui, 1:Add, Text,		y+10	x10		vlblCSVFileToExport w85 right, Export data to file:
+Gui, 1:Add, Edit,		yp		x100	vstrFileToExport gChangedFileToExport
+Gui, 1:Add, Button,		yp		x+5		vbtnHelpFileToExport gButtonHelpFileToExport, ?
+Gui, 1:Add, Button,		yp		x+5		vbtnSelectFileToExport gButtonSelectFileToExport default, &Select
+
+Gui, 1:Tab, 5
 Gui, 1:Add, Link,		y+10	x10		vlblAboutText, <a href="https://bitbucket.org/JnLlnd/csvbuddy">%strApplicationName% %strApplicationVersion%</a>`nby Jean Lalonde (<a href="http://www.autohotkey.com/board/user/4880-jnllnd/">JnLlnd</a> on AHK forum)`nAll rights reserved (c)2013 - DO NOT DISTRIBUTE WITHOUT AUTHOR AUTORIZATION`n`nUsing AHK library: <a href="https://www.github.com/JnLlnd/ObjCSV">ObjCSV</a>`nUsing icon by: <a href="http://www.visualpharm.com">Visual Pharm</a>
 
 Gui, 1:Tab
@@ -116,6 +121,14 @@ else if InStr(tabCSVBuddy, "Edit")
 else if InStr(tabCSVBuddy, "Save")
 	if LV_GetCount("Column")
 		GuiControl, 1:+Default, btnSelectFileToSave
+	else
+	{
+		MsgBox, 48, %strApplicationName%, First load a CSV file in the first tab.
+		GuiControl, 1:Choose, tabCSVBuddy, 1
+	}
+else if InStr(tabCSVBuddy, "Export")
+	if LV_GetCount("Column")
+		GuiControl, 1:+Default, btnSelectFileToExport
 	else
 	{
 		MsgBox, 48, %strApplicationName%, First load a CSV file in the first tab.
@@ -564,6 +577,43 @@ return
 
 
 
+; --------------------- TAB 4 --------------------------
+
+ButtonHelpFileToExport:
+Help("Export data to file", "### Enter the name of the CSV file destination file (the current program's directory will be used if an absolute path isn't specified) or hit ""Select"" to choose the CSV destination file. When other options are OK, hit ""Save"" to save all or selected rows to the CSV file.`n`nNote that all rows are saved by default. You can select one row (using Click), a series of adjacent rows (using Shift-Click) or non contiguous rows (using Ctrl-Click or Shift-Ctrl-Click).`n`nNote that fields will be saved in the order they appear in the list.")
+return
+
+
+
+ButtonSelectFileToExport:
+Gui, 1:Submit, NoHide
+Gui, 1:+OwnDialogs 
+FileSelectFile, strOutputFile, 2, %A_ScriptDir%, Select export file
+if !(StrLen(strOutputFile))
+	return
+GuiControl, 1:, strFileToExport, %strOutputFile%
+GuiControl, 1:+Default, btnExportFile
+GuiControl, 1:Focus, btnExportFile
+return
+
+
+
+ChangedFileToExport:
+Gui, 1:Submit, NoHide
+if FileExist(strFileToExport)
+	GuiControl, 1:Show, btnCheckExportFile
+else
+	GuiControl, 1:Hide, btnCheckExportFile
+return
+
+
+
+###:
+return
+
+
+
+
 ; --------------------- LISTVIEW EVENTS --------------------------
 
 
@@ -783,6 +833,12 @@ GuiControl, 1:Move, btnHelpFileToSave, % "X" . (A_GuiWidth - 90)
 GuiControl, 1:Move, btnSelectFileToSave, % "X" . (A_GuiWidth - 65)
 GuiControl, 1:Move, btnSaveFile, % "X" . (A_GuiWidth - 65)
 GuiControl, 1:Move, btnCheckFile, % "X" . (A_GuiWidth - 65)
+
+GuiControl, 1:Move, strFileToExport, % "W" . (A_GuiWidth - 200)
+GuiControl, 1:Move, btnHelpFileToExport, % "X" . (A_GuiWidth - 90)
+GuiControl, 1:Move, btnSelectFileToExport, % "X" . (A_GuiWidth - 65)
+GuiControl, 1:Move, btnExportFile, % "X" . (A_GuiWidth - 65) ; ###
+GuiControl, 1:Move, btnCheckExportFile, % "X" . (A_GuiWidth - 65) ; ###
 
 GuiControl, 1:Move, lvData, % "W" . (A_GuiWidth - 20) . " H" . (A_GuiHeight - 190)
 
