@@ -11,7 +11,7 @@ This script uses the library ObjCSV (https://github.com/JnLlnd/ObjCSV)
 #Include %A_ScriptDir%\..\ObjCSV\lib\ObjCSV.ahk
 
 global strApplicationName := "CSV Buddy"
-global strApplicationVersion := "v0.1.1 ALPHA"
+global strApplicationVersion := "v0.2.x ALPHA"
 
 
 
