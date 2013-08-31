@@ -10,9 +10,12 @@ This script uses the library ObjCSV (https://github.com/JnLlnd/ObjCSV)
 #SingleInstance force
 #Include %A_ScriptDir%\..\ObjCSV\lib\ObjCSV.ahk
 
+; --------------------- GLOBAL AND DEFAULT VALUES --------------------------
+
 global strApplicationName := "CSV Buddy"
 global strApplicationVersion := "v0.2.x ALPHA"
 
+intDefaultWidth := 16 ; used when export to fixed width format
 
 
 ; --------------------- GUI1 --------------------------
@@ -95,17 +98,20 @@ Gui, 1:Add, Text,		y+10	x10		vlblCSVExportFormat w85 right, Export format:
 Gui, 1:Add, Radio,		yp		x100	vradFixed gClickRadFixed, Fixed width
 Gui, 1:Add, Radio,		yp		x+15	vradHTML gClickRadHTML, HTML
 Gui, 1:Add, Radio,		yp		x+15	vradXML gClickRadXML, XML
+Gui, 1:Add, Radio,		yp		x+15	vradOther gClickRadOther, Other
 Gui, 1:Add, Button,		yp		x+15	vbtnHelpExportFormat gButtonHelpExportFormat, ?
 Gui, 1:Add, Text,		y+10	x10		vlblMultiPurpose w85 right hidden, Hidden Label:
 Gui, 1:Add, Edit,		yp		x100	vstrMultiPurpose gChangedMultiPurpose hidden
-Gui, 1:Add, Button,		yp		x+5		vbtnHelpMultiPurpose gButtonHelpMultiPurpose hidden, ?
+Gui, 1:Add, Button,		yp		x+5		vbtnMultiPurpose gButtonMultiPurpose hidden, Lorem ipsum dolor sit
+Gui, 1:Add, Button,		y105	x+5		vbtnExportFile gButtonExportFile, Export
+Gui, 1:Add, Button,		y137	x+5		vbtnCheckExportFile hidden gButtonCheckExportFile, Check
 
 Gui, 1:Tab, 5
 Gui, 1:Add, Link,		y+10	x10		vlblAboutText, <a href="https://bitbucket.org/JnLlnd/csvbuddy">%strApplicationName% %strApplicationVersion%</a>`nby Jean Lalonde (<a href="http://www.autohotkey.com/board/user/4880-jnllnd/">JnLlnd</a> on AHK forum)`nAll rights reserved (c)2013 - DO NOT DISTRIBUTE WITHOUT AUTHOR AUTORIZATION`n`nUsing AHK library: <a href="https://www.github.com/JnLlnd/ObjCSV">ObjCSV</a>`nUsing icon by: <a href="http://www.visualpharm.com">Visual Pharm</a>
 
 Gui, 1:Tab
 
-Gui, 1:Add, ListView, 	x10 r24 w200 vlvData -ReadOnly NoSort gListViewEvents
+Gui, 1:Add, ListView, 	x10 r24 w200 vlvData -ReadOnly NoSort gListViewEvents -LV0x10
 
 Gui, 1:Show, Autosize
 
@@ -147,7 +153,7 @@ else if InStr(tabCSVBuddy, "About")
 	; do nothing
 }
 else
-	###_M(tabCSVBuddy . " !?!")
+	###_D(tabCSVBuddy . " !?!")
 return
 
 
@@ -345,7 +351,7 @@ if !LV_GetCount()
 }
 if !StrLen(strRenameEscaped)
 {
-	MsgBox, 52, %strApplicationName%, In "Rename fields:", enter the list of field names separated by the field delimiter ( %strFieldDelimiter1% ). Field names are automatically filled when you load a CSV file in the first tab.`n`nIf no field names are provided, numbers will be used as field names. Do you want to use numbers as field names? 
+	MsgBox, 52, %strApplicationName%, In "Rename fields:", enter the list of field names separated by the field delimiter ( %strFieldDelimiter1% ). Field names are automatically filled when you load a CSV file in the first tab.`n`nIf no field names are provided, numbers are used as field names. Do you want to use numbers as field names? 
 	IfMsgBox, No
 		return
 }
@@ -366,7 +372,7 @@ return
 
 ButtonHelpRename:
 Gui, 1:Submit, NoHide
-Help("Rename Fields", "To change field names (column headers), enter a new name for each fields, in the order they actually appear in the list, separated by the field delimiter ( " . strFieldDelimiter1 . " ) and click ""Rename"".`n`nIf you enter less names than the number of fields (or no field name at all), numbers will be used as field names for remaining columns.`n`nField names including the separator character ( " . strFieldDelimiter1 . " ) must be enclosed by the encapsulator character ( " . strFieldEncapsulator1 . " ).`n`nTo save the file, click on the last tab ""3) Save CSV File"".")
+Help("Rename Fields", "To change field names (column headers), enter a new name for each fields, in the order they actually appear in the list, separated by the field delimiter ( " . strFieldDelimiter1 . " ) and click ""Rename"".`n`nIf you enter less names than the number of fields (or no field name at all), numbers are used as field names for remaining columns.`n`nField names including the separator character ( " . strFieldDelimiter1 . " ) must be enclosed by the encapsulator character ( " . strFieldEncapsulator1 . " ).`n`nTo save the file, click on the last tab ""3) Save CSV File"".")
 return
 
 
@@ -450,7 +456,7 @@ return
 
 ButtonHelpOrder:
 Gui, 1:Submit, NoHide
-Help("Order Fields", "To change the order of fields (columns) in the list, enter the name of fields in the new order you want to apply, separated by the field delimiter ( " . strFieldDelimiter1 . " ) and click ""Order"".`n`nField names including the separator character ( " . strFieldDelimiter1 . " ) must be enclosed by the encapsulator character ( " . strFieldEncapsulator1 . " ).`n`nIf you enter less fields than in the original header, fields not included in the new order will be removed from the list. However, if you only want to remove fields from the list (without changing the order), the ""Select"" button gives better performance on large files.`n`nTo save the file, click on the last tab ""3) Save CSV File"" and select the destination file.")
+Help("Order Fields", "To change the order of fields (columns) in the list, enter the name of fields in the new order you want to apply, separated by the field delimiter ( " . strFieldDelimiter1 . " ) and click ""Order"".`n`nField names including the separator character ( " . strFieldDelimiter1 . " ) must be enclosed by the encapsulator character ( " . strFieldEncapsulator1 . " ).`n`nIf you enter less fields than in the original header, fields not included in the new order are removed from the list. However, if you only want to remove fields from the list (without changing the order), the ""Select"" button gives better performance on large files.`n`nTo save the file, click on the last tab ""3) Save CSV File"" and select the destination file.")
 return
 
 
@@ -459,7 +465,7 @@ return
 
 
 ButtonHelpFileToSave:
-Help("CSV File To Save", "Enter the name of the CSV file destination file (the current program's directory will be used if an absolute path isn't specified) or hit ""Select"" to choose the CSV destination file. When other options are OK, hit ""Save"" to save all or selected rows to the CSV file.`n`nNote that all rows are saved by default. You can select one row (using Click), a series of adjacent rows (using Shift-Click) or non contiguous rows (using Ctrl-Click or Shift-Ctrl-Click).`n`nNote that fields will be saved in the order they appear in the list.")
+Help("CSV File To Save", "Enter the name of the CSV file destination file (the current program's directory is used if an absolute path isn't specified) or hit ""Select"" to choose the CSV destination file. When other options are OK, hit ""Save"" to save all or selected rows to the CSV file.`n`nNote that all rows are saved by default. You can select one row (using Click), a series of adjacent rows (using Shift-Click) or non contiguous rows (using Ctrl-Click or Shift-Ctrl-Click).`n`nNote that fields are saved in the order they appear in the list and rows are saved according to the current sorting order (click on a column name to sort rows).")
 return
 
 
@@ -494,7 +500,7 @@ return
 
 
 ButtonHelpEncapsulator3:
-Help("Field Encapsulator", "When data fields in a CSV file contain characters used as delimiter or end-of-line, they must be enclosed in a field encapsulator. Enter the field encapsulator character to use in the saved file.`n`nThe encapsulator is often double-quotes ( ""..."" ) or single quotes ( '...' ). For example, if comma is used as field delimiter in the saved CSV file, the data field ""Smith, John"" will be encapsulated because it contains a comma.`n`nIf a field contains the character used as encapsulator, this character will be doubled. For example, the data ""John ""Junior"" Smith"" will be entered as ""John """"Junior"""" Smith"").")
+Help("Field Encapsulator", "When data fields in a CSV file contain characters used as delimiter or end-of-line, they must be enclosed in a field encapsulator. Enter the field encapsulator character to use in the saved file.`n`nThe encapsulator is often double-quotes ( ""..."" ) or single quotes ( '...' ). For example, if comma is used as field delimiter in the saved CSV file, the data field ""Smith, John"" is encapsulated because it contains a comma.`n`nIf a field contains the character used as encapsulator, this character is doubled. For example, the data ""John ""Junior"" Smith"" will be entered as ""John """"Junior"""" Smith"").")
 return
 
 
@@ -588,7 +594,7 @@ return
 ; --------------------- TAB 4 --------------------------
 
 ButtonHelpFileToExport:
-Help("Export data to file", "### Enter the name of the CSV file destination file (the current program's directory will be used if an absolute path isn't specified) or hit ""Select"" to choose the CSV destination file. When other options are OK, hit ""Save"" to save all or selected rows to the CSV file.`n`nNote that all rows are saved by default. You can select one row (using Click), a series of adjacent rows (using Shift-Click) or non contiguous rows (using Ctrl-Click or Shift-Ctrl-Click).`n`nNote that fields will be saved in the order they appear in the list.")
+Help("Export data", "Enter the name of the destination file of the export (the current program's directory is used if an absolute path isn't specified) or hit ""Select"" to choose the destination file. When other options are OK, hit ""Export"" to export all or selected rows to the destination file.`n`nNote that all rows are saved by default. You can select one row (using Click), a series of adjacent rows (using Shift-Click) or non contiguous rows (using Ctrl-Click or Shift-Ctrl-Click).`n`nNote that fields are exported in the order they appear in the list and rows are saved according to the current sorting order (click on a column name to sort rows).")
 return
 
 
@@ -616,40 +622,63 @@ return
 
 
 
+###:
+return
+
+
+
 ClickRadFixed:
-/*
-pour help, ré.écrire: Fixed width files are text files files where data is presented in lines and fields. The fields themselves are placed at fixed offsets.
-MS ACCESS Fixed-width files     In a fixed-width file, each record appears on a separate line, and the width of each field remains consistent across records. In other words, the length of the first field of every record might always be seven characters, the length of the second field of every record might always be 12 characters, and so on. If the actual values of a field vary from record to record, the values that fall short of the required width will be padded with trailing spaces.
-*/
 Gui, 1:Submit, NoHide
-; GuiControl, 1:Hide, ###
-; GuiControl, 1:Show, ###
+GuiControl, 1:Show, lblMultiPurpose
+GuiControl, 1:, lblMultiPurpose, Fields width:
+GuiControl, 1:Show, strMultiPurpose
+GuiControl, 1:Show, btnMultiPurpose
+GuiControl, 1:, btnMultiPurpose, Change default width
+strDelimiter := StrConvertFieldDelimiter(strFieldDelimiter1)
+objCurrentHeader := ReturnDSVObjectArray(strCurrentHeader, strDelimiter, strFieldEncapsulator1)
+; strFieldDelimiter1 et strFieldEncapsulator1 pour la lecture de strCurrentHeader
+strMultiPurpose := ""
+Loop, % objCurrentHeader.MaxIndex()
+	strMultiPurpose := strMultiPurpose . Format4CSV(objCurrentHeader[A_Index], strDelimiter, strFieldEncapsulator1) . strDelimiter . intDefaultWidth . strDelimiter
+StringTrimRight, strMultiPurpose, strMultiPurpose, 1 ; remove extra delimiter
+GuiControl, 1:, strMultiPurpose, % StrEscape(strMultiPurpose)
 return
 
 
 
 ClickRadHTML:
 Gui, 1:Submit, NoHide
-; GuiControl, 1:Hide, ###
-; GuiControl, 1:Show, ###
+GuiControl, 1:Show, lblMultiPurpose
+GuiControl, 1:, lblMultiPurpose, HTML template:
+GuiControl, 1:Show, strMultiPurpose
+; ### btn Select
 return
 
 
 
 ClickRadXML:
 Gui, 1:Submit, NoHide
-; GuiControl, 1:Hide, ###
-; GuiControl, 1:Show, ###
+GuiControl, 1:Hide, lblMultiPurpose
+GuiControl, 1:Hide, strMultiPurpose
+return
+
+
+
+ClickRadOther:
+Gui, 1:Submit, NoHide
+GuiControl, 1:Show, lblMultiPurpose
+GuiControl, 1:, lblMultiPurpose, Row template:
+GuiControl, 1:Show, strMultiPurpose
+GuiControl, 1:, strMultiPurpose, ###
 return
 
 
 
 ButtonHelpExportFormat:
-return
-
-
-
-ButtonHelpMultiPurpose:
+/*
+pour help, ré.écrire: Fixed width files are text files files where data is presented in lines and fields. The fields themselves are placed at fixed offsets.
+MS ACCESS Fixed-width files     In a fixed-width file, each record appears on a separate line, and the width of each field remains consistent across records. In other words, the length of the first field of every record might always be seven characters, the length of the second field of every record might always be 12 characters, and so on. If the actual values of a field vary from record to record, the values that fall short of the required width will be padded with trailing spaces.
+*/
 return
 
 
@@ -659,7 +688,28 @@ return
 
 
 
-###:
+ButtonMultiPurpose:
+Gui, 1:Submit, NoHide
+if (radFixed)
+{
+	InputBox, intNewDefaultWidth, %strApplicationName% (%strApplicationVersion%) - Default fixed width, Enter the new default width:, , , 120, , , , , %intDefaultWidth%
+	if !ErrorLevel
+		if (intNewDefaultWidth > 0)
+			intDefaultWidth := intNewDefaultWidth
+		else
+			MsgBox, 48, %strApplicationName%, Default fixed width must be greater than 0.
+	Gosub, ClickRadFixed
+}
+return
+
+
+
+ButtonExportFile:
+return
+
+
+
+ButtonCheckExportFile:
 return
 
 
@@ -809,7 +859,7 @@ IsRowSelected(intRow)
 
 ButtonSaveRecord:
 if (intRowNumber < 1)
-	###_M("Pas normal! intRowNumber: " . intRowNumber)
+	###_D("Pas normal! intRowNumber: " . intRowNumber)
 Gui, 2:Submit
 Gui, 1:Default
 loop, % LV_GetCount("Column")
@@ -835,7 +885,7 @@ return
 
 
 2GuiSize:  ; Expand or shrink the ListView in response to the user's resizing of the window.
-; ###_M("intNbFieldsOnScreen: " . intNbFieldsOnScreen . " / intWidthSize: " . intWidthSize)
+; ###_D("intNbFieldsOnScreen: " . intNbFieldsOnScreen . " / intWidthSize: " . intWidthSize)
 if A_EventInfo = 1  ; The window has been minimized.  No action needed.
     return
 ; MsgBox, A_GuiWidth: %A_GuiWidth% / intCol: %intCol%
@@ -890,8 +940,8 @@ GuiControl, 1:Move, btnHelpFileToExport, % "X" . (A_GuiWidth - 90)
 GuiControl, 1:Move, btnSelectFileToExport, % "X" . (A_GuiWidth - 65)
 GuiControl, 1:Move, btnExportFile, % "X" . (A_GuiWidth - 65) ; ###
 GuiControl, 1:Move, btnCheckExportFile, % "X" . (A_GuiWidth - 65) ; ###
-GuiControl, 1:Move, strMultiPurpose, % "W" . (A_GuiWidth - 205)
-GuiControl, 1:Move, btnHelpMultiPurpose, % "X" . (A_GuiWidth - 90)
+GuiControl, 1:Move, strMultiPurpose, % "W" . (A_GuiWidth - 305) ;  ### était 205
+GuiControl, 1:Move, btnMultiPurpose, % "X" . (A_GuiWidth - 190) ; ### était 90
 
 GuiControl, 1:Move, lvData, % "W" . (A_GuiWidth - 20) . " H" . (A_GuiHeight - 190)
 
