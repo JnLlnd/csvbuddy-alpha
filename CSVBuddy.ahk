@@ -91,6 +91,14 @@ Gui, 1:Add, Text,		y+10	x10		vlblCSVFileToExport w85 right, Export data to file:
 Gui, 1:Add, Edit,		yp		x100	vstrFileToExport gChangedFileToExport
 Gui, 1:Add, Button,		yp		x+5		vbtnHelpFileToExport gButtonHelpFileToExport, ?
 Gui, 1:Add, Button,		yp		x+5		vbtnSelectFileToExport gButtonSelectFileToExport default, &Select
+Gui, 1:Add, Text,		y+10	x10		vlblCSVExportFormat w85 right, Export format:
+Gui, 1:Add, Radio,		yp		x100	vradFixed gClickRadFixed, Fixed width
+Gui, 1:Add, Radio,		yp		x+15	vradHTML gClickRadHTML, HTML
+Gui, 1:Add, Radio,		yp		x+15	vradXML gClickRadXML, XML
+Gui, 1:Add, Button,		yp		x+15	vbtnHelpExportFormat gButtonHelpExportFormat, ?
+Gui, 1:Add, Text,		y+10	x10		vlblMultiPurpose w85 right hidden, Hidden Label:
+Gui, 1:Add, Edit,		yp		x100	vstrMultiPurpose gChangedMultiPurpose hidden
+Gui, 1:Add, Button,		yp		x+5		vbtnHelpMultiPurpose gButtonHelpMultiPurpose hidden, ?
 
 Gui, 1:Tab, 5
 Gui, 1:Add, Link,		y+10	x10		vlblAboutText, <a href="https://bitbucket.org/JnLlnd/csvbuddy">%strApplicationName% %strApplicationVersion%</a>`nby Jean Lalonde (<a href="http://www.autohotkey.com/board/user/4880-jnllnd/">JnLlnd</a> on AHK forum)`nAll rights reserved (c)2013 - DO NOT DISTRIBUTE WITHOUT AUTHOR AUTORIZATION`n`nUsing AHK library: <a href="https://www.github.com/JnLlnd/ObjCSV">ObjCSV</a>`nUsing icon by: <a href="http://www.visualpharm.com">Visual Pharm</a>
@@ -219,14 +227,14 @@ Gui, 1:Submit, NoHide
 FileReadLine, strCurrentHeader, %strFileToLoad%, 1
 GuiControl, 1:, strFileHeaderEscaped, % StrEscape(strCurrentHeader)
 GuiControl, 1:Disable, strFileHeaderEscaped
-GuiControl, 1:, lblHeader, CSV Header:
+GuiControl, 1:, lblHeader, File CSV &Header:
 return
 
 
 
 ClickRadSetHeader:
 GuiControl, 1:Enable, strFileHeaderEscaped
-GuiControl, 1:, lblHeader, CSV &Header:
+GuiControl, 1:, lblHeader, Custom &Header:
 GuiControl, 1:Focus, strFileHeaderEscaped
 return
 
@@ -608,6 +616,49 @@ return
 
 
 
+ClickRadFixed:
+/*
+pour help, ré.écrire: Fixed width files are text files files where data is presented in lines and fields. The fields themselves are placed at fixed offsets.
+MS ACCESS Fixed-width files     In a fixed-width file, each record appears on a separate line, and the width of each field remains consistent across records. In other words, the length of the first field of every record might always be seven characters, the length of the second field of every record might always be 12 characters, and so on. If the actual values of a field vary from record to record, the values that fall short of the required width will be padded with trailing spaces.
+*/
+Gui, 1:Submit, NoHide
+; GuiControl, 1:Hide, ###
+; GuiControl, 1:Show, ###
+return
+
+
+
+ClickRadHTML:
+Gui, 1:Submit, NoHide
+; GuiControl, 1:Hide, ###
+; GuiControl, 1:Show, ###
+return
+
+
+
+ClickRadXML:
+Gui, 1:Submit, NoHide
+; GuiControl, 1:Hide, ###
+; GuiControl, 1:Show, ###
+return
+
+
+
+ButtonHelpExportFormat:
+return
+
+
+
+ButtonHelpMultiPurpose:
+return
+
+
+
+ChangedMultiPurpose:
+return
+
+
+
 ###:
 return
 
@@ -839,6 +890,8 @@ GuiControl, 1:Move, btnHelpFileToExport, % "X" . (A_GuiWidth - 90)
 GuiControl, 1:Move, btnSelectFileToExport, % "X" . (A_GuiWidth - 65)
 GuiControl, 1:Move, btnExportFile, % "X" . (A_GuiWidth - 65) ; ###
 GuiControl, 1:Move, btnCheckExportFile, % "X" . (A_GuiWidth - 65) ; ###
+GuiControl, 1:Move, strMultiPurpose, % "W" . (A_GuiWidth - 205)
+GuiControl, 1:Move, btnHelpMultiPurpose, % "X" . (A_GuiWidth - 90)
 
 GuiControl, 1:Move, lvData, % "W" . (A_GuiWidth - 20) . " H" . (A_GuiHeight - 190)
 
