@@ -85,8 +85,8 @@ Gui, 1:Add, Radio,		y+10	x500	vradSaveSingleline gClickRadSaveSingleline, Save s
 Gui, 1:Add, Button,		y100	x620	vbtnHelpMultiline gButtonHelpSaveMultiline, ?
 Gui, 1:Add, Text,		y+25	x500	vlblEndoflineReplacement hidden, End-of-line replacement:
 Gui, 1:Add, Edit,		yp		x620	vstrEndoflineReplacement hidden w50 center, % chr(182)
-Gui, 1:Add, Button,		y105	x+5		vbtnSaveFile gButtonSaveFile, Save
-Gui, 1:Add, Button,		y137	x+5		vbtnCheckFile hidden gButtonCheckFile, Check
+Gui, 1:Add, Button,		y105	x+5		vbtnSaveFile gButtonSaveFile hidden, Save
+Gui, 1:Add, Button,		y137	x+5		vbtnCheckFile gButtonCheckFile hidden, Check
 
 Gui, 1:Tab, 4
 Gui, 1:Add, Text,		y+10	x10		vlblCSVFileToExport w85 right, Export data to file:
@@ -102,8 +102,8 @@ Gui, 1:Add, Button,		yp		x+15	vbtnHelpExportFormat gButtonHelpExportFormat, ?
 Gui, 1:Add, Text,		y+10	x10		vlblMultiPurpose w85 right hidden, Hidden Label:
 Gui, 1:Add, Edit,		yp		x100	vstrMultiPurpose gChangedMultiPurpose hidden
 Gui, 1:Add, Button,		yp		x+5		vbtnMultiPurpose gButtonMultiPurpose hidden, Lorem ipsum dolor sit
-Gui, 1:Add, Button,		y105	x+5		vbtnExportFile gButtonExportFile, Export
-Gui, 1:Add, Button,		y137	x+5		vbtnCheckExportFile hidden gButtonCheckExportFile, Check
+Gui, 1:Add, Button,		y105	x+5		vbtnExportFile gButtonExportFile hidden, Export
+Gui, 1:Add, Button,		y137	x+5		vbtnCheckExportFile gButtonCheckExportFile hidden, Check
 
 Gui, 1:Tab, 5
 Gui, 1:Add, Link,		y+10	x10		vlblAboutText, <a href="https://bitbucket.org/JnLlnd/csvbuddy">%strApplicationName% %strApplicationVersion%</a>`nby Jean Lalonde (<a href="http://www.autohotkey.com/board/user/4880-jnllnd/">JnLlnd</a> on AHK forum)`nAll rights reserved (c)2013 - DO NOT DISTRIBUTE WITHOUT AUTHOR AUTORIZATION`n`nUsing AHK library: <a href="https://www.github.com/JnLlnd/ObjCSV">ObjCSV v0.2</a>`nUsing icon by: <a href="http://www.visualpharm.com">Visual Pharm</a>
@@ -113,6 +113,7 @@ Gui, 1:Tab
 Gui, 1:Add, ListView, 	x10 r24 w200 vlvData -ReadOnly NoSort gListViewEvents -LV0x10
 
 GuiControl, 1:Focus, btnSelectFileToLoad
+GuiControl, 1:+Default, btnSelectFileToLoad
 Gui, 1:Show, Autosize
 
 return
@@ -188,14 +189,21 @@ return
 
 ChangedFileToLoad:
 Gui, 1:Submit, NoHide
+SplitPath, strFileToLoad, , strOutDir, strOutExtension, strOutNameNoExt
 loop
 {
-	SplitPath, strFileToLoad, , strOutDir, strOutExtension, strOutNameNoExt
 	strNewName := strOutDir . "\" . strOutNameNoExt . " (" . A_Index  . ")." . strOutExtension
-	GuiControl, 1:, strFileToSave, %strNewName%
 	if !FileExist(strNewName)
 		break
 }
+GuiControl, 1:, strFileToSave, %strNewName%
+loop
+{
+	strNewName := strOutDir . "\" . strOutNameNoExt . "-EXPORT (" . A_Index  . ").txt"
+	if !FileExist(strNewName)
+		break
+}
+GuiControl, 1:, strFileToExport, %strNewName%
 if FileExist(strFileToLoad)
 {
 	GuiControl, 1:Show, btnPreviewFile
@@ -487,10 +495,15 @@ return
 
 ChangedFileToSave:
 Gui, 1:Submit, NoHide
+SplitPath, strFileToSave, , strOutDir, strOutExtension, strOutNameNoExt
 if FileExist(strFileToSave)
 	GuiControl, 1:Show, btnCheckFile
 else
 	GuiControl, 1:Hide, btnCheckFile
+if StrLen(strOutNameNoExt)
+	GuiControl, 1:Show, btnSaveFile
+else
+	GuiControl, 1:Hide, btnSaveFile
 return
 
 
@@ -539,24 +552,10 @@ return
 
 ButtonSaveFile:
 Gui, 1:Submit, NoHide
-if FileExist(strFileToSave)
-{
-	MsgBox, 35, %strApplicationName% - File exists, File exists:`n%strFileToSave%`n`nDo you want to overwrite this file?`n`nYes: The file will be overwritten.`nNo: Data will be added to the existing file.
-	IfMsgBox, Yes
-		blnOverwrite := True
-	IfMsgBox, No
-		blnOverwrite := False
-	IfMsgBox, Cancel
-		return
-}
-if (LV_GetCount("Selected") = 1)
-{
-	MsgBox, 35, %strApplicationName% - One record selected, Only one record is selected. Do you want to save only this record?`n`nYes: Only one record will be saved.`nNo: All records will be saved.
-	IfMsgBox, No
-		LV_Modify(0, "Select") ; select all records
-	IfMsgBox, Cancel
-		return
-}
+blnOverwrite := CheckIfFileExistOverwrite(strFileToSave)
+if (blnOverwrite < 0)
+	return
+gosub, CheckOneRow
 ; ObjCSV_ListView2Collection([strGuiID = "", strListViewID = "", strFieldOrder = "", strFieldDelimiter = ",", strEncapsulator = """", blnProgress = "0"])
 obj := ObjCSV_ListView2Collection("1", "lvData", , , , 1)
 if (radSaveMultiline)
@@ -578,16 +577,6 @@ return
 
 ButtonCheckFile:
 Gui, 1:Submit, NoHide
-if !StrLen(strFileToSave)
-{
-	MsgBox, 48, %strApplicationName%, First use the "Select" button to choose the CSV file you want to save to.
-	return
-}
-if !FileExist(strFileToSave)
-{
-	MsgBox, 48, %strApplicationName%, File does not exist yet.
-	return
-}
 run notepad.exe %strFileToSave%
 return
 
@@ -616,10 +605,15 @@ return
 
 ChangedFileToExport:
 Gui, 1:Submit, NoHide
+SplitPath, strFileToExport, , strOutDir, strOutExtension, strOutNameNoExt
 if FileExist(strFileToExport)
 	GuiControl, 1:Show, btnCheckExportFile
 else
 	GuiControl, 1:Hide, btnCheckExportFile
+if StrLen(strOutNameNoExt)
+	GuiControl, 1:Show, btnExportFile
+else
+	GuiControl, 1:Hide, btnExportFile
 return
 
 
@@ -650,6 +644,7 @@ Gui, 1:Submit, NoHide
 GuiControl, 1:Show, lblMultiPurpose
 GuiControl, 1:, lblMultiPurpose, HTML template:
 GuiControl, 1:Show, strMultiPurpose
+GuiControl, 1:, strMultiPurpose
 ; ### btn Select
 return
 
@@ -659,6 +654,7 @@ ClickRadXML:
 Gui, 1:Submit, NoHide
 GuiControl, 1:Hide, lblMultiPurpose
 GuiControl, 1:Hide, strMultiPurpose
+GuiControl, 1:, strMultiPurpose
 return
 
 
@@ -668,7 +664,7 @@ Gui, 1:Submit, NoHide
 GuiControl, 1:Show, lblMultiPurpose
 GuiControl, 1:, lblMultiPurpose, Row template:
 GuiControl, 1:Show, strMultiPurpose
-GuiControl, 1:, strMultiPurpose, ###
+GuiControl, 1:, strMultiPurpose
 return
 
 
@@ -677,6 +673,10 @@ ButtonHelpExportFormat:
 /*
 pour help, ré.écrire: Fixed width files are text files files where data is presented in lines and fields. The fields themselves are placed at fixed offsets.
 MS ACCESS Fixed-width files     In a fixed-width file, each record appears on a separate line, and the width of each field remains consistent across records. In other words, the length of the first field of every record might always be seven characters, the length of the second field of every record might always be 12 characters, and so on. If the actual values of a field vary from record to record, the values that fall short of the required width will be padded with trailing spaces.
+
+Pour fix: header selon tab 3
+Pour tous: eol remplacement du tab 3
+Pour quels? Delimiters?
 */
 return
 
@@ -710,32 +710,23 @@ return
 
 ButtonExportFile:
 Gui, 1:Submit, NoHide
-; ### vérifier qu'on a un nom de fichier
+blnOverwrite := CheckIfFileExistOverwrite(strFileToExport)
+if (blnOverwrite < 0)
+	return
+gosub, CheckOneRow
 if (radFixed)
 {
-	; ### vérifier qu'on a les largeurs de champs
-	if FileExist(strFileToExport)
+	if !StrLen(strMultiPurpose)
 	{
-		MsgBox, 35, %strApplicationName% - File exists, File exists:`n%strFileToExport%`n`nDo you want to overwrite this file?`n`nYes: The file will be overwritten.`nNo: Data will be added to the existing file.
-		IfMsgBox, Yes
-			blnOverwrite := True
-		IfMsgBox, No
-			blnOverwrite := False
-		IfMsgBox, Cancel
-			return
-	}
-	if (LV_GetCount("Selected") = 1)
-	{
-		MsgBox, 35, %strApplicationName% - One record selected, Only one record is selected. Do you want to save only this record?`n`nYes: Only one record will be saved.`nNo: All records will be saved.
-		IfMsgBox, No
-			LV_Modify(0, "Select") ; select all records
-		IfMsgBox, Cancel
-			return
+		MsgBox, 48, %strApplicationName%, Fill the "Fileds width" zone with fields names and width separated by the separator %strFieldDelimiter3%.
+		return
 	}
 	; ObjCSV_ListView2Collection([strGuiID = "", strListViewID = "", strFieldOrder = "", strFieldDelimiter = ",", strEncapsulator = """", blnProgress = "0"])
 	obj := ObjCSV_ListView2Collection("1", "lvData", , , , 1)
-	strRealFieldDelimiter3 := StrMakeRealFieldDelimiter(strFieldDelimiter3) ; strFieldDelimiter3 et strFieldEncapsulator3 pour l'écriture
+	strRealFieldDelimiter3 := StrMakeRealFieldDelimiter(strFieldDelimiter3) ; strFieldDelimiter3 et strFieldEncapsulator3 pour l'écriture de l'entête seulement
 	objFieldsArray := ReturnDSVObjectArray(StrUnEscape(strMultiPurpose), strRealFieldDelimiter3, strFieldEncapsulator3)
+	strFieldsName := ""
+	strFieldsWidth := ""
 	loop, % objFieldsArray.MaxIndex() / 2
 	{
 		strFieldsName := strFieldsName . Format4CSV(objFieldsArray[(A_Index * 2) - 1]) . strRealFieldDelimiter3
@@ -748,21 +739,30 @@ if (radFixed)
 	else
 		strEolReplacement := strEndoflineReplacement
 	; ObjCSV_Collection2Fixed(objCollection, strFilePath, strFieldsWidth, blnHeader := 0, strFieldOrder := "", blnProgress := 0, blnOverwrite := 0, strFieldDelimiter := ",", strEncapsulator := """", strEndOfLine := "`r`n", strEolReplacement := "")
-	; ### prendre strMultiPurpose et splitter avec DSV
 	ObjCSV_Collection2Fixed(obj, strFileToExport, strFieldsWidth, radSaveWithHeader, strFieldsName, 1, blnOverwrite, strRealFieldDelimiter3, strFieldEncapsulator3, , strEolReplacement)
-	if FileExist(strFileToSave)
+	if FileExist(strFileToExport)
 	{
-		GuiControl, 1:Show, btnCheckFile
-		GuiControl, 1:+Default, btnCheckFile
-		GuiControl, 1:Focus, btnCheckFile
+		GuiControl, 1:Show, btnCheckExportFile
+		GuiControl, 1:+Default, btnCheckExportFile
+		GuiControl, 1:Focus, btnCheckExportFile
 	}
 	obj := ; release object
 }
+else if (radHTML)
+	###_D("HTML")
+else if (radXML)
+	###_D("XML")
+else if (radOther)
+	###_D("Other")
+else
+	MsgBox, 48, %strApplicationName%, Select the Export format.
 return
 
 
 
 ButtonCheckExportFile:
+Gui, 1:Submit, NoHide
+run notepad.exe %strFileToExport%
 return
 
 
@@ -1014,6 +1014,19 @@ return
 
 
 
+CheckOneRow:
+if (LV_GetCount("Selected") = 1)
+{
+	MsgBox, 35, %strApplicationName% - One record selected, Only one record is selected. Do you want to save only this record?`n`nYes: Only one record will be saved.`nNo: All records will be saved.
+	IfMsgBox, No
+		LV_Modify(0, "Select") ; select all records
+	IfMsgBox, Cancel
+		return
+}
+return
+
+
+
 GuiClose:
 ExitApp
 
@@ -1096,5 +1109,25 @@ ShrinkEditControl(strEditHandle, intMaxRows, strGuiName)
 		intNewHeight := (intHeightOneRow * intMaxRows) + intEditMargin
 		; MsgBox, % "intNbRows: " . intNbRows . "`nintOriginalHeight: " . intOriginalHeight . "`nintHeightOneRow: " . intHeightOneRow . "`nintNewHeight: " . intNewHeight
 		GuiControl, %strGuiName%:Move, %strEditHandle%, h%intNewHeight%
+	}
+}
+
+
+
+CheckIfFileExistOverwrite(strFileName)
+{
+	if !StrLen(strFileName)
+		return -1
+	if !FileExist(strFileName)
+		return True
+	else
+	{
+		MsgBox, 35, %strApplicationName% - File exists, File exists:`n%strFileName%`n`nDo you want to overwrite this file?`n`nYes: The file will be overwritten.`nNo: Data will be added to the existing file.
+		IfMsgBox, Yes
+			return True
+		IfMsgBox, No
+			return False
+		IfMsgBox, Cancel
+			return -1
 	}
 }
