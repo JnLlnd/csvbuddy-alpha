@@ -72,10 +72,10 @@ Gui, 1:Add, Edit,		yp		x100	vstrFileToSave gChangedFileToSave
 Gui, 1:Add, Button,		yp		x+5		vbtnHelpFileToSave gButtonHelpFileToSave, ?
 Gui, 1:Add, Button,		yp		x+5		vbtnSelectFileToSave gButtonSelectFileToSave default, &Select
 Gui, 1:Add, Text,		y+10	x100	vlblFieldDelimiter3, Field delimiter:
-Gui, 1:Add, Edit,		yp		x200	vstrFieldDelimiter3 w20 limit1 center, `, 
+Gui, 1:Add, Edit,		yp		x200	vstrFieldDelimiter3 gChangedFieldDelimiter3 w20 limit1 center, `, 
 Gui, 1:Add, Button,		yp		x+5		vbtnHelpFieldDelimiter3 gButtonHelpFieldDelimiter3, ?
 Gui, 1:Add, Text,		y+10	x100	vlblFieldEncapsulator3, Field encaps&ulator:
-Gui, 1:Add, Edit,		yp		x200	vstrFieldEncapsulator3 w20 limit1 center, `"
+Gui, 1:Add, Edit,		yp		x200	vstrFieldEncapsulator3 gChangedFieldEncapsulator3 w20 limit1 center, `"
 Gui, 1:Add, Button,		yp		x+5		vbtnHelpEncapsulator3 gButtonHelpEncapsulator3, ?
 Gui, 1:Add, Radio,		y100	x300	vradSaveWithHeader checked, Save &with CSV header
 Gui, 1:Add, Radio,		y+10	x300	vradSaveNoHeader, Save without CSV header
@@ -264,8 +264,7 @@ return
 ChangedFieldDelimiter1:
 Gui, 1:Submit, NoHide
 GuiControl, 1:, strFieldDelimiter3, %strFieldDelimiter1%
-;  effacer la ligne suivante quand je serai certain que ça ne servait à rien
-; GuiControl, 1:, strFieldDelimiter1, %strFieldDelimiter1%
+Gosub, UpdateCurrentHeader
 return
 
 
@@ -279,8 +278,7 @@ return
 ChangedFieldEncapsulator1:
 Gui, 1:Submit, NoHide
 GuiControl, 1:, strFieldEncapsulator3, %strFieldEncapsulator1%
-;  effacer la ligne suivante quand je serai certain que ça ne servait à rien
-; GuiControl, 1:, strFieldEncapsulator1, %strFieldEncapsulator1%
+Gosub, UpdateCurrentHeader
 return
 
 
@@ -514,6 +512,20 @@ return
 
 
 
+ChangedFieldDelimiter3:
+Gui, 1:Submit, NoHide
+Gosub, UpdateCurrentHeader
+return
+
+
+
+ChangedFieldEncapsulator3:
+Gui, 1:Submit, NoHide
+Gosub, UpdateCurrentHeader
+return
+
+
+
 ButtonHelpEncapsulator3:
 Help("Field Encapsulator", "When data fields in a CSV file contain characters used as delimiter or end-of-line, they must be enclosed in a field encapsulator. Enter the field encapsulator character to use in the saved file.`n`nThe encapsulator is often double-quotes ( ""..."" ) or single quotes ( '...' ). For example, if comma is used as field delimiter in the saved CSV file, the data field ""Smith, John"" is encapsulated because it contains a comma.`n`nIf a field contains the character used as encapsulator, this character is doubled. For example, the data ""John ""Junior"" Smith"" will be entered as ""John """"Junior"""" Smith"").")
 return
@@ -699,6 +711,15 @@ if (radFixed)
 			MsgBox, 48, %strApplicationName%, Default fixed width must be greater than 0.
 	Gosub, ClickRadFixed
 }
+else if (radHTML)
+{
+}
+else if (radXML)
+{
+}
+else if (radOther)
+{
+}
 return
 
 
@@ -715,39 +736,13 @@ if (blnOverwrite < 0)
 	return
 gosub, CheckOneRow
 if (radFixed)
-{
-	if !StrLen(strMultiPurpose)
+	if StrLen(strMultiPurpose)
+		Gosub, ExportFixed
+	else
 	{
-		MsgBox, 48, %strApplicationName%, Fill the "Fileds width" zone with fields names and width separated by the separator %strFieldDelimiter3%.
+		MsgBox, 48, %strApplicationName%, Fill the "Fields width" zone with fields names and width separated by the field delimiter ( %strFieldDelimiter3% ).
 		return
 	}
-	; ObjCSV_ListView2Collection([strGuiID = "", strListViewID = "", strFieldOrder = "", strFieldDelimiter = ",", strEncapsulator = """", blnProgress = "0"])
-	obj := ObjCSV_ListView2Collection("1", "lvData", , , , 1)
-	strRealFieldDelimiter3 := StrMakeRealFieldDelimiter(strFieldDelimiter3) ; strFieldDelimiter3 et strFieldEncapsulator3 pour l'écriture de l'entête seulement
-	objFieldsArray := ReturnDSVObjectArray(StrUnEscape(strMultiPurpose), strRealFieldDelimiter3, strFieldEncapsulator3)
-	strFieldsName := ""
-	strFieldsWidth := ""
-	loop, % objFieldsArray.MaxIndex() / 2
-	{
-		strFieldsName := strFieldsName . Format4CSV(objFieldsArray[(A_Index * 2) - 1]) . strRealFieldDelimiter3
-		strFieldsWidth := strFieldsWidth . objFieldsArray[(A_Index * 2)] . strRealFieldDelimiter3
-	}
-	StringTrimRight, strFieldsName, strFieldsName, 1 ; remove extra delimiter
-	StringTrimRight, strFieldsWidth, strFieldsWidth, 1 ; remove extra delimiter
-	if (radSaveMultiline)
-		strEolReplacement := ""
-	else
-		strEolReplacement := strEndoflineReplacement
-	; ObjCSV_Collection2Fixed(objCollection, strFilePath, strFieldsWidth, blnHeader := 0, strFieldOrder := "", blnProgress := 0, blnOverwrite := 0, strFieldDelimiter := ",", strEncapsulator := """", strEndOfLine := "`r`n", strEolReplacement := "")
-	ObjCSV_Collection2Fixed(obj, strFileToExport, strFieldsWidth, radSaveWithHeader, strFieldsName, 1, blnOverwrite, strRealFieldDelimiter3, strFieldEncapsulator3, , strEolReplacement)
-	if FileExist(strFileToExport)
-	{
-		GuiControl, 1:Show, btnCheckExportFile
-		GuiControl, 1:+Default, btnCheckExportFile
-		GuiControl, 1:Focus, btnCheckExportFile
-	}
-	obj := ; release object
-}
 else if (radHTML)
 	###_D("HTML")
 else if (radXML)
@@ -1010,6 +1005,12 @@ GuiControl, 1:, strFileHeaderEscaped, %strEscapedCurrentHeader%
 GuiControl, 1:, strRenameEscaped, %strEscapedCurrentHeader%
 GuiControl, 1:, strSelectEscaped, %strEscapedCurrentHeader%
 GuiControl, 1:, strOrderEscaped, %strEscapedCurrentHeader%
+if (radFixed)
+	Gosub, ClickRadFixed
+else if (radHTML)
+	Gosub, ClickRadHTML
+else if (radOther)
+	Gosub, ClickRadOther
 return
 
 
@@ -1023,6 +1024,45 @@ if (LV_GetCount("Selected") = 1)
 	IfMsgBox, Cancel
 		return
 }
+return
+
+
+
+ExportFixed:
+; ObjCSV_ListView2Collection([strGuiID = "", strListViewID = "", strFieldOrder = "", strFieldDelimiter = ",", strEncapsulator = """", blnProgress = "0"])
+obj := ObjCSV_ListView2Collection("1", "lvData", , , , 1)
+strRealFieldDelimiter3 := StrMakeRealFieldDelimiter(strFieldDelimiter3) ; strFieldDelimiter3 et strFieldEncapsulator3 pour l'écriture de l'entête seulement
+objFieldsArray := ReturnDSVObjectArray(StrUnEscape(strMultiPurpose), strRealFieldDelimiter3, strFieldEncapsulator3)
+strFieldsName := ""
+strFieldsWidth := ""
+loop, % objFieldsArray.MaxIndex() / 2
+{
+	strThisName := objFieldsArray[(A_Index * 2) - 1]
+	strFieldsName := strFieldsName . Format4CSV(strThisName, strRealFieldDelimiter3, strFieldEncapsulator3) . strRealFieldDelimiter3
+	intThisWidth := objFieldsArray[(A_Index * 2)]
+	if intThisWidth  is integer
+		strFieldsWidth := strFieldsWidth . intThisWidth . strRealFieldDelimiter3
+	else
+	{
+		MsgBox, 48, %strApplicationName%, "%intThisWidth%" in field # %A_Index% "%strThisName%" must be an integer number.
+		return
+	}
+}
+StringTrimRight, strFieldsName, strFieldsName, 1 ; remove extra delimiter
+StringTrimRight, strFieldsWidth, strFieldsWidth, 1 ; remove extra delimiter
+if (radSaveMultiline)
+	strEolReplacement := ""
+else
+	strEolReplacement := strEndoflineReplacement
+; ObjCSV_Collection2Fixed(objCollection, strFilePath, strFieldsWidth, blnHeader := 0, strFieldOrder := "", blnProgress := 0, blnOverwrite := 0, strFieldDelimiter := ",", strEncapsulator := """", strEndOfLine := "`r`n", strEolReplacement := "")
+ObjCSV_Collection2Fixed(obj, strFileToExport, strFieldsWidth, radSaveWithHeader, strFieldsName, 1, blnOverwrite, strRealFieldDelimiter3, strFieldEncapsulator3, , strEolReplacement)
+if FileExist(strFileToExport)
+{
+	GuiControl, 1:Show, btnCheckExportFile
+	GuiControl, 1:+Default, btnCheckExportFile
+	GuiControl, 1:Focus, btnCheckExportFile
+}
+obj := ; release object
 return
 
 
