@@ -339,7 +339,7 @@ if !LV_GetCount()
 else
 {
 	gosub UpdateCurrentHeader
-	Help("Ready to edit","Your CSV file is loaded.`n`nYou can sort rows by clicking on column headers. Choose sorting type: alphabetical, numeric integer or numeric float, ascending or descending.`n`nDouble-click on a row to edit a record.  Right-click anywhere in the list view to select or deselect all rows.`n`nYou can use the ""2) Edit Columns"" tab to edit field names, select fields to keep or change fields order.`n`nWhen you will be ready, change to the ""3) Save CSV File"" tab to save all or selected rows in a new CSV file.")
+	Help("Ready to edit","Your CSV file is loaded.`n`nYou can sort rows by clicking on column headers. Choose sorting type: alphabetical, numeric integer or numeric float, ascending or descending.`n`nDouble-click on a row to edit a record.  Right-click anywhere in the list view to select all rows, deselect all rows or reverse selection.`n`nYou can use the ""2) Edit Columns"" tab to edit field names, select fields to keep or change fields order.`n`nWhen you will be ready, change to the ""3) Save CSV File"" tab to save all or selected rows in a new CSV file.")
 }
 obj := ; release object
 return
