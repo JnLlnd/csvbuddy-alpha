@@ -49,7 +49,7 @@ Gui, 1:Add, Button,		yp		x+5		vbtnHelpEncapsulator1 gButtonHelpEncapsulator1, ?
 Gui, 1:Add, Checkbox,	yp		x+27	vblnMultiline1 gChangedMultiline1, &Multi-line fields
 Gui, 1:Add, Button,		yp		x+0		vbtnHelpMultiline1 gButtonHelpMultiline1, ?
 Gui, 1:Add, Text,		yp		x+5		vlblEndoflineReplacement1 hidden, EOL replacement:
-Gui, 1:Add, Edit,		yp		x+5		vstrEndoflineReplacement1 w30 center hidden, % chr(182)
+Gui, 1:Add, Edit,		yp		x+5		vstrEndoflineReplacement1 w30 center hidden
 Gui, 1:Add, Button,		yp		x+5		vbtnLoadFile gButtonLoadFile hidden, &Load
 
 Gui, 1:Tab, 2
@@ -311,9 +311,8 @@ if LV_GetCount("Column")
 	}
 }
 strCurrentHeader := StrUnEscape(strFileHeaderEscaped)
-; ObjCSV_CSV2Collection(strFilePath, ByRef strFieldNames [, blnHeader = true, blnMultiline = 1, blnProgress = 0, strFieldDelimiter = ",", strFieldEncapsulator = """", strRecordDelimiter = "`n", strOmitChars = "`r"])
-; strEndoflineReplacement1
-obj := ObjCSV_CSV2Collection(strFileToLoad, strCurrentHeader, radGetHeader, blnMultiline1, 1, StrConvertFieldDelimiter(strFieldDelimiter1), strFieldEncapsulator1)
+; ObjCSV_CSV2Collection(strFilePath, ByRef strFieldNames [, blnHeader = 1, blnMultiline = 1, blnProgress = 0, strFieldDelimiter = ",", strEncapsulator = """", strRecordDelimiter = "`n", strOmitChars = "`r", strEolReplacement = ""])
+obj := ObjCSV_CSV2Collection(strFileToLoad, strCurrentHeader, radGetHeader, blnMultiline1, 1, StrConvertFieldDelimiter(strFieldDelimiter1), strFieldEncapsulator1, , , strEndoflineReplacement1)
 ; ObjCSV_Collection2ListView(objCollection [, strGuiID = "", strListViewID = "", strFieldOrder = "", strFieldDelimiter = ",", strEncapsulator = """", strSortFields = "", strSortOptions = "", blnProgress = "0"])
 ObjCSV_Collection2ListView(obj, "1", "lvData", strCurrentHeader, StrConvertFieldDelimiter(strFieldDelimiter1), strFieldEncapsulator1, , , 1)
 if !LV_GetCount()
