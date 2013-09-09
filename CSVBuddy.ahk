@@ -13,7 +13,7 @@ This script uses the library ObjCSV v0.2 (https://github.com/JnLlnd/ObjCSV)
 ; --------------------- GLOBAL AND DEFAULT VALUES --------------------------
 
 global strApplicationName := "CSV Buddy"
-global strApplicationVersion := "v0.2.x ALPHA"
+global strApplicationVersion := "v0.2.1 ALPHA" ; (avec pull de v0.1.2 ALPHA)
 
 intDefaultWidth := 16 ; used when export to fixed width format
 
@@ -39,17 +39,19 @@ Gui, 1:Add, Text,		y+10	x10 	vlblHeader w85 right, CSV file &Header:
 Gui, 1:Add, Edit,		yp		x100	vstrFileHeaderEscaped disabled
 Gui, 1:Add, Button,		yp		x+5		vbtnHelpHeader gButtonHelpHeader, ?
 Gui, 1:Add, Button,		yp		x+5		vbtnPreviewFile gButtonPreviewFile hidden, &Preview
-Gui, 1:Add, Radio,		y+10	x100	vradGetHeader gClickRadGetHeader checked, &Get header from CSV file
-Gui, 1:Add, Radio,		yp		x+5		vradSetHeader gClickRadSetHeader, Set &CSV header
+Gui, 1:Add, Radio,		y+10	x100	vradGetHeader gClickRadGetHeader checked, &Get header from file
+Gui, 1:Add, Radio,		yp		x+5		vradSetHeader gClickRadSetHeader, Set header
 Gui, 1:Add, Button,		yp		x+0		vbtnHelpSetHeader gButtonHelpSetHeader, ?
-Gui, 1:Add, Text,		xp		x+45	vlblFieldDelimiter1, Field &delimiter:
+Gui, 1:Add, Text,		xp		x+27	vlblFieldDelimiter1, Field &delimiter:
 Gui, 1:Add, Edit,		yp		x+5		vstrFieldDelimiter1 gChangedFieldDelimiter1 w20 limit1 center, `, 
 Gui, 1:Add, Button,		yp		x+5		vbtnHelpFieldDelimiter1 gButtonHelpFieldDelimiter1, ?
-Gui, 1:Add, Text,		yp		x+45	vlblFieldEncapsulator1, Field e&ncapsulator:
+Gui, 1:Add, Text,		yp		x+27	vlblFieldEncapsulator1, Field e&ncapsulator:
 Gui, 1:Add, Edit,		yp		x+5		vstrFieldEncapsulator1 gChangedFieldEncapsulator1 w20 limit1 center, `"
 Gui, 1:Add, Button,		yp		x+5		vbtnHelpEncapsulator1 gButtonHelpEncapsulator1, ?
-Gui, 1:Add, Checkbox,	yp		x+45	vblnMultiline1, &Multi-line fields
+Gui, 1:Add, Checkbox,	yp		x+27	vblnMultiline1 gChangedMultiline1, &Multi-line fields
 Gui, 1:Add, Button,		yp		x+0		vbtnHelpMultiline1 gButtonHelpMultiline1, ?
+Gui, 1:Add, Text,		yp		x+5		vlblEndoflineReplacement1 hidden, EOL replacement:
+Gui, 1:Add, Edit,		yp		x+5		vstrEndoflineReplacement1 w30 center hidden
 Gui, 1:Add, Button,		yp		x+5		vbtnLoadFile gButtonLoadFile hidden, &Load
 
 Gui, 1:Tab, 2
@@ -83,10 +85,10 @@ Gui, 1:Add, Button,		y100	x450	vbtnHelpSaveHeader gButtonHelpSaveHeader, ?
 Gui, 1:Add, Radio,		y100	x500	vradSaveMultiline gClickRadSaveMultiline checked, Save multi-line
 Gui, 1:Add, Radio,		y+10	x500	vradSaveSingleline gClickRadSaveSingleline, Save single-line
 Gui, 1:Add, Button,		y100	x620	vbtnHelpMultiline gButtonHelpSaveMultiline, ?
-Gui, 1:Add, Text,		y+25	x500	vlblEndoflineReplacement hidden, End-of-line replacement:
-Gui, 1:Add, Edit,		yp		x620	vstrEndoflineReplacement hidden w50 center, % chr(182)
+Gui, 1:Add, Text,		y+25	x500	vlblEndoflineReplacement3 hidden, End-of-line replacement:
+Gui, 1:Add, Edit,		yp		x620	vstrEndoflineReplacement3 hidden w50 center, % chr(182)
 Gui, 1:Add, Button,		y105	x+5		vbtnSaveFile gButtonSaveFile hidden, Save
-Gui, 1:Add, Button,		y137	x+5		vbtnCheckFile gButtonCheckFile hidden, Check
+Gui, 1:Add, Button,		y137	x+5		vbtnCheckFile hidden gButtonCheckFile, Check
 
 Gui, 1:Tab, 4
 Gui, 1:Add, Text,		y+10	x10		vlblCSVFileToExport w85 right, Export data to file:
@@ -289,8 +291,24 @@ return
 
 
 
+ChangedMultiline1:
+Gui, 1:Submit, NoHide
+if (blnMultiline1)
+{
+	GuiControl, 1:Show, lblEndoflineReplacement1
+	GuiControl, 1:Show, strEndoflineReplacement1
+}
+else
+{
+	GuiControl, 1:Hide, lblEndoflineReplacement1
+	GuiControl, 1:Hide, strEndoflineReplacement1
+}
+return
+
+
+
 ButtonHelpMultiline1:
-Help("Multi-line Fields", "Most CSV files do not contain line breaks inside text field. But some do. For example, you can find multi-lines ""Notes"" fields in Google or Outlook contacts exported files.`n`nIf text fields in your CSV file contain line breaks, select this checkbox to turn this option ON. If not, keep it OFF since this will improve loading performance.")
+Help("Multi-line Fields", "Most CSV files do not contain line breaks inside text field. But some do. For example, you can find multi-lines ""Notes"" fields in Google or Outlook contacts exported files.`n`nIf text fields in your CSV file contain line breaks, select this checkbox to turn this option ON. If not, keep it OFF since this will improve loading performance.`n`nIf you turn Multi-line ON, you have the additional option to choose a character (or string) that will be converted to line-breaks if found in the CSV file.")
 return
 
 
@@ -327,8 +345,8 @@ if LV_GetCount("Column")
 }
 strCurrentHeader := StrUnEscape(strFileHeaderEscaped)
 strRealFieldDelimiter1 := StrMakeRealFieldDelimiter(strFieldDelimiter1)
-; ObjCSV_CSV2Collection(strFilePath, ByRef strFieldNames [, blnHeader = true, blnMultiline = 1, blnProgress = 0, strFieldDelimiter = ",", strFieldEncapsulator = """", strRecordDelimiter = "`n", strOmitChars = "`r"])
-obj := ObjCSV_CSV2Collection(strFileToLoad, strCurrentHeader, radGetHeader, blnMultiline1, 1, strRealFieldDelimiter1, strFieldEncapsulator1)
+; ObjCSV_CSV2Collection(strFilePath, ByRef strFieldNames [, blnHeader = 1, blnMultiline = 1, blnProgress = 0, strFieldDelimiter = ",", strEncapsulator = """", strRecordDelimiter = "`n", strOmitChars = "`r", strEolReplacement = ""])
+obj := ObjCSV_CSV2Collection(strFileToLoad, strCurrentHeader, radGetHeader, blnMultiline1, 1, strRealFieldDelimiter1, strFieldEncapsulator1, , , strEndoflineReplacement1)
 ; ObjCSV_Collection2ListView(objCollection [, strGuiID = "", strListViewID = "", strFieldOrder = "", strFieldDelimiter = ",", strEncapsulator = """", strSortFields = "", strSortOptions = "", blnProgress = "0"])
 ObjCSV_Collection2ListView(obj, "1", "lvData", strCurrentHeader, strRealFieldDelimiter1, strFieldEncapsulator1, , , 1)
 if !LV_GetCount()
@@ -541,16 +559,16 @@ return
 
 ClickRadSaveMultiline:
 Gui, 1:Submit, NoHide
-GuiControl, 1:Hide, lblEndoflineReplacement
-GuiControl, 1:Hide, strEndoflineReplacement
+GuiControl, 1:Hide, lblEndoflineReplacement3
+GuiControl, 1:Hide, strEndoflineReplacement3
 return
 
 
 
 ClickRadSaveSingleline:
 Gui, 1:Submit, NoHide
-GuiControl, 1:Show, lblEndoflineReplacement
-GuiControl, 1:Show, strEndoflineReplacement
+GuiControl, 1:Show, lblEndoflineReplacement3
+GuiControl, 1:Show, strEndoflineReplacement3
 return
 
 
@@ -573,7 +591,7 @@ obj := ObjCSV_ListView2Collection("1", "lvData", , , , 1)
 if (radSaveMultiline)
 	strEolReplacement := ""
 else
-	strEolReplacement := strEndoflineReplacement
+	strEolReplacement := strEndoflineReplacement3
 ; ObjCSV_Collection2CSV(objCollection, strFilePath [, blnHeader = 0, strFieldOrder = "", blnProgress = 0, blnOverwrite = 0, strFieldDelimiter = ",", strEncapsulator = """", strEndOfLine = "`n", strEolReplacement = ""])
 ObjCSV_Collection2CSV(obj, strFileToSave, radSaveWithHeader, GetHeader(strFieldDelimiter3, strFieldEncapsulator3), 1, blnOverwrite, StrMakeRealFieldDelimiter(strFieldDelimiter3), strFieldEncapsulator3, , strEolReplacement)
 if FileExist(strFileToSave)
