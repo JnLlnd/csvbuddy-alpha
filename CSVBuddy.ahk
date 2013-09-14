@@ -103,7 +103,7 @@ Gui, 1:Add, Radio,		yp		x+15	vradOther gClickRadOther, Other
 Gui, 1:Add, Button,		yp		x+15	vbtnHelpExportFormat gButtonHelpExportFormat, ?
 Gui, 1:Add, Text,		y+10	x10		vlblMultiPurpose w85 right hidden, Hidden Label:
 Gui, 1:Add, Edit,		yp		x100	vstrMultiPurpose gChangedMultiPurpose hidden
-Gui, 1:Add, Button,		yp		x+5		vbtnMultiPurpose gButtonMultiPurpose hidden, Lorem ipsum dolor sit
+Gui, 1:Add, Button,		yp		x+5		vbtnMultiPurpose gButtonMultiPurpose hidden, Lorem ipsum dolor sitm ; conserver texte important pour la largeur du bouton
 Gui, 1:Add, Button,		y105	x+5		vbtnExportFile gButtonExportFile hidden, Export
 Gui, 1:Add, Button,		y137	x+5		vbtnCheckExportFile gButtonCheckExportFile hidden, Check
 
@@ -653,6 +653,7 @@ Gui, 1:Submit, NoHide
 GuiControl, 1:Show, lblMultiPurpose
 GuiControl, 1:, lblMultiPurpose, Fields width:
 GuiControl, 1:Show, strMultiPurpose
+GuiControl, 1:, strMultiPurpose
 GuiControl, 1:Show, btnMultiPurpose
 GuiControl, 1:, btnMultiPurpose, Change default width
 strRealFieldDelimiter1 := StrMakeRealFieldDelimiter(strFieldDelimiter1)
@@ -675,7 +676,16 @@ GuiControl, 1:Show, lblMultiPurpose
 GuiControl, 1:, lblMultiPurpose, HTML template:
 GuiControl, 1:Show, strMultiPurpose
 GuiControl, 1:, strMultiPurpose
-; ### btn Select
+GuiControl, 1:Show, btnMultiPurpose
+GuiControl, 1:, btnMultiPurpose, Select HTML template
+SplitPath, strFileToLoad, , strOutDir, strOutExtension, strOutNameNoExt
+loop
+{
+	strNewName := strOutDir . "\" . strOutNameNoExt . " (" . A_Index  . ").html"
+	if !FileExist(strNewName)
+		break
+}
+GuiControl, 1:, strFileToExport, %strNewName%
 return
 
 
@@ -685,6 +695,8 @@ Gui, 1:Submit, NoHide
 GuiControl, 1:Hide, lblMultiPurpose
 GuiControl, 1:Hide, strMultiPurpose
 GuiControl, 1:, strMultiPurpose
+GuiControl, 1:Hide, btnMultiPurpose
+; ####
 return
 
 
@@ -695,6 +707,7 @@ GuiControl, 1:Show, lblMultiPurpose
 GuiControl, 1:, lblMultiPurpose, Row template:
 GuiControl, 1:Show, strMultiPurpose
 GuiControl, 1:, strMultiPurpose
+GuiControl, 1:Hide, btnMultiPurpose
 return
 
 
@@ -705,8 +718,11 @@ pour help, ré.écrire: Fixed width files are text files files where data is prese
 MS ACCESS Fixed-width files     In a fixed-width file, each record appears on a separate line, and the width of each field remains consistent across records. In other words, the length of the first field of every record might always be seven characters, the length of the second field of every record might always be 12 characters, and so on. If the actual values of a field vary from record to record, the values that fall short of the required width will be padded with trailing spaces.
 
 Pour fix: header selon tab 3
-Pour tous: eol remplacement du tab 3
+Pour tous (sauf HTML): eol remplacement du tab 3
 Pour quels? Delimiters?
+
+Pour HTML: délimiteur du template: ¤ (ASCII 164)
+
 */
 return
 
@@ -719,6 +735,7 @@ return
 
 ButtonMultiPurpose:
 Gui, 1:Submit, NoHide
+Gui, 1:+OwnDialogs 
 if (radFixed)
 {
 	InputBox, intNewDefaultWidth, %strApplicationName% (%strApplicationVersion%) - Default fixed width, Enter the new default width:, , , 120, , , , , %intDefaultWidth%
@@ -731,6 +748,10 @@ if (radFixed)
 }
 else if (radHTML)
 {
+	FileSelectFile, strHtmlTemplateFile, 3, %A_ScriptDir%, Select HTML template
+	if !(StrLen(strHtmlTemplateFile))
+		return
+	GuiControl, 1:, strMultiPurpose, %strHtmlTemplateFile%
 }
 else if (radXML)
 {
@@ -762,7 +783,13 @@ if (radFixed)
 		return
 	}
 else if (radHTML)
-	###_D("HTML")
+	if StrLen(strMultiPurpose)
+		Gosub, ExportHTML
+	else
+	{
+		MsgBox, 48, %strApplicationName%, First use the "Select HTML template" button to choose the HTML template file.
+		return
+	}
 else if (radXML)
 	###_D("XML")
 else if (radOther)
@@ -775,7 +802,10 @@ return
 
 ButtonCheckExportFile:
 Gui, 1:Submit, NoHide
-run notepad.exe %strFileToExport%
+if InStr(strFileToExport, ".htm")
+	run %strFileToExport%
+else
+	run notepad.exe %strFileToExport%
 return
 
 
@@ -1074,6 +1104,22 @@ else
 	strEolReplacement := strEndoflineReplacement
 ; ObjCSV_Collection2Fixed(objCollection, strFilePath, strFieldsWidth, blnHeader := 0, strFieldOrder := "", blnProgress := 0, blnOverwrite := 0, strFieldDelimiter := ",", strEncapsulator := """", strEndOfLine := "`r`n", strEolReplacement := "")
 ObjCSV_Collection2Fixed(obj, strFileToExport, strFieldsWidth, radSaveWithHeader, strFieldsName, 1, blnOverwrite, strRealFieldDelimiter3, strFieldEncapsulator3, , strEolReplacement)
+if FileExist(strFileToExport)
+{
+	GuiControl, 1:Show, btnCheckExportFile
+	GuiControl, 1:+Default, btnCheckExportFile
+	GuiControl, 1:Focus, btnCheckExportFile
+}
+obj := ; release object
+return
+
+
+
+ExportHTML:
+; ObjCSV_ListView2Collection([strGuiID = "", strListViewID = "", strFieldOrder = "", strFieldDelimiter = ",", strEncapsulator = """", blnProgress = "0"])
+obj := ObjCSV_ListView2Collection("1", "lvData", , , , 1)
+; ObjCSV_Collection2HTML(objCollection, strFilePath, strTemplateFile [, strTemplateEncapsulator = ~, blnProgress = 0, blnOverwrite = 0)
+ObjCSV_Collection2HTML(obj, strFileToExport, strMultiPurpose, "¤", 0, 1)
 if FileExist(strFileToExport)
 {
 	GuiControl, 1:Show, btnCheckExportFile
