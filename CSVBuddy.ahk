@@ -347,7 +347,7 @@ strCurrentHeader := StrUnEscape(strFileHeaderEscaped)
 strRealFieldDelimiter1 := StrMakeRealFieldDelimiter(strFieldDelimiter1)
 ; ObjCSV_CSV2Collection(strFilePath, ByRef strFieldNames [, blnHeader = 1, blnMultiline = 1, blnProgress = 0, strFieldDelimiter = ",", strEncapsulator = """", strRecordDelimiter = "`n", strOmitChars = "`r", strEolReplacement = ""])
 obj := ObjCSV_CSV2Collection(strFileToLoad, strCurrentHeader, radGetHeader, blnMultiline1, 1, strRealFieldDelimiter1, strFieldEncapsulator1, , , strEndoflineReplacement1)
-; ObjCSV_Collection2ListView(objCollection [, strGuiID = "", strListViewID = "", strFieldOrder = "", strFieldDelimiter = ",", strEncapsulator = """", strSortFields = "", strSortOptions = "", blnProgress = "0"])
+; ObjCSV_Collection2ListView(objCollection [, strGuiID = "", strListViewID = "", strFieldOrder = "", strFieldDelimiter = ",", strEncapsulator = """", strSortFields = "", strSortOptions = "", blnProgress = 0])
 ObjCSV_Collection2ListView(obj, "1", "lvData", strCurrentHeader, strRealFieldDelimiter1, strFieldEncapsulator1, , , 1)
 if !LV_GetCount()
 {
@@ -454,8 +454,8 @@ return
 
 ButtonSetOrder:
 /*
-ObjCSV_Collection2ListView(objCollection, strGuiID := "", strListViewID := "", strFieldOrder := "", strFieldDelimiter := ",", strEncapsulator := """", strSortFields := "", strSortOptions := "", blnProgress := "0")
-ObjCSV_ListView2Collection(strGuiID := "", strListViewID := "", strFieldOrder := "", strFieldDelimiter := ",", strFieldEncapsulator := """", blnProgress := "0")
+ObjCSV_Collection2ListView(objCollection, strGuiID := "", strListViewID := "", strFieldOrder := "", strFieldDelimiter := ",", strEncapsulator := """", strSortFields := "", strSortOptions := "", blnProgress := 0)
+ObjCSV_ListView2Collection(strGuiID := "", strListViewID := "", strFieldOrder := "", strFieldDelimiter := ",", strFieldEncapsulator := """", blnProgress := 0)
 */
 Gui, 1:Submit, NoHide
 if !StrLen(strSelectEscaped)
@@ -586,7 +586,7 @@ blnOverwrite := CheckIfFileExistOverwrite(strFileToSave)
 if (blnOverwrite < 0)
 	return
 gosub, CheckOneRow
-; ObjCSV_ListView2Collection([strGuiID = "", strListViewID = "", strFieldOrder = "", strFieldDelimiter = ",", strEncapsulator = """", blnProgress = "0"])
+; ObjCSV_ListView2Collection([strGuiID = "", strListViewID = "", strFieldOrder = "", strFieldDelimiter = ",", strEncapsulator = """", blnProgress = 0])
 obj := ObjCSV_ListView2Collection("1", "lvData", , , , 1)
 if (radSaveMultiline)
 	strEolReplacement := ""
@@ -696,7 +696,6 @@ GuiControl, 1:Hide, lblMultiPurpose
 GuiControl, 1:Hide, strMultiPurpose
 GuiControl, 1:, strMultiPurpose
 GuiControl, 1:Hide, btnMultiPurpose
-; ####
 return
 
 
@@ -791,7 +790,7 @@ else if (radHTML)
 		return
 	}
 else if (radXML)
-	###_D("XML")
+	Gosub, ExportXML
 else if (radOther)
 	###_D("Other")
 else
@@ -1077,7 +1076,7 @@ return
 
 
 ExportFixed:
-; ObjCSV_ListView2Collection([strGuiID = "", strListViewID = "", strFieldOrder = "", strFieldDelimiter = ",", strEncapsulator = """", blnProgress = "0"])
+; ObjCSV_ListView2Collection([strGuiID = "", strListViewID = "", strFieldOrder = "", strFieldDelimiter = ",", strEncapsulator = """", blnProgress = 0])
 obj := ObjCSV_ListView2Collection("1", "lvData", , , , 1)
 strRealFieldDelimiter3 := StrMakeRealFieldDelimiter(strFieldDelimiter3) ; strFieldDelimiter3 et strFieldEncapsulator3 pour l'écriture de l'entête seulement
 objFieldsArray := ReturnDSVObjectArray(StrUnEscape(strMultiPurpose), strRealFieldDelimiter3, strFieldEncapsulator3)
@@ -1116,10 +1115,26 @@ return
 
 
 ExportHTML:
-; ObjCSV_ListView2Collection([strGuiID = "", strListViewID = "", strFieldOrder = "", strFieldDelimiter = ",", strEncapsulator = """", blnProgress = "0"])
+; ObjCSV_ListView2Collection([strGuiID = "", strListViewID = "", strFieldOrder = "", strFieldDelimiter = ",", strEncapsulator = """", blnProgress = 0])
 obj := ObjCSV_ListView2Collection("1", "lvData", , , , 1)
-; ObjCSV_Collection2HTML(objCollection, strFilePath, strTemplateFile [, strTemplateEncapsulator = ~, blnProgress = 0, blnOverwrite = 0)
+; ObjCSV_Collection2HTML(objCollection, strFilePath, strTemplateFile [, strTemplateEncapsulator = ~, blnProgress = 0, blnOverwrite = 0])
 ObjCSV_Collection2HTML(obj, strFileToExport, strMultiPurpose, "¤", 0, 1)
+if FileExist(strFileToExport)
+{
+	GuiControl, 1:Show, btnCheckExportFile
+	GuiControl, 1:+Default, btnCheckExportFile
+	GuiControl, 1:Focus, btnCheckExportFile
+}
+obj := ; release object
+return
+
+
+
+ExportXML:
+; ObjCSV_ListView2Collection([strGuiID = "", strListViewID = "", strFieldOrder = "", strFieldDelimiter = ",", strEncapsulator = """", blnProgress = 0])
+obj := ObjCSV_ListView2Collection("1", "lvData", , , , 1)
+; ObjCSV_Collection2XML(objCollection, strFilePath [, blnProgress = 0, blnOverwrite = 0])
+ObjCSV_Collection2XML(obj, strFileToExport, 0, 1)
 if FileExist(strFileToExport)
 {
 	GuiControl, 1:Show, btnCheckExportFile
