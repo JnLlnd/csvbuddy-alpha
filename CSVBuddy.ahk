@@ -16,6 +16,7 @@ global strApplicationName := "CSV Buddy"
 global strApplicationVersion := "v0.2.1 ALPHA" ; (avec pull de v0.1.2 ALPHA)
 
 intDefaultWidth := 16 ; used when export to fixed width format
+strTemplateDelimiter := "¤" ; Chr(164)
 
 
 ; --------------------- GUI1 --------------------------
@@ -99,7 +100,7 @@ Gui, 1:Add, Text,		y+10	x10		vlblCSVExportFormat w85 right, Export format:
 Gui, 1:Add, Radio,		yp		x100	vradFixed gClickRadFixed, Fixed width
 Gui, 1:Add, Radio,		yp		x+15	vradHTML gClickRadHTML, HTML
 Gui, 1:Add, Radio,		yp		x+15	vradXML gClickRadXML, XML
-Gui, 1:Add, Radio,		yp		x+15	vradOther gClickRadOther, Other
+Gui, 1:Add, Radio,		yp		x+15	vradExpress gClickRadExpress, Express
 Gui, 1:Add, Button,		yp		x+15	vbtnHelpExportFormat gButtonHelpExportFormat, ?
 Gui, 1:Add, Text,		y+10	x10		vlblMultiPurpose w85 right hidden, Hidden Label:
 Gui, 1:Add, Edit,		yp		x100	vstrMultiPurpose gChangedMultiPurpose hidden
@@ -191,21 +192,8 @@ return
 
 ChangedFileToLoad:
 Gui, 1:Submit, NoHide
-SplitPath, strFileToLoad, , strOutDir, strOutExtension, strOutNameNoExt
-loop
-{
-	strNewName := strOutDir . "\" . strOutNameNoExt . " (" . A_Index  . ")." . strOutExtension
-	if !FileExist(strNewName)
-		break
-}
-GuiControl, 1:, strFileToSave, %strNewName%
-loop
-{
-	strNewName := strOutDir . "\" . strOutNameNoExt . "-EXPORT (" . A_Index  . ").txt"
-	if !FileExist(strNewName)
-		break
-}
-GuiControl, 1:, strFileToExport, %strNewName%
+GuiControl, 1:, strFileToSave, % NewFileName(strFileToLoad)
+GuiControl, 1:, strFileToExport, % NewFileName(strFileToLoad, "-EXPORT", "txt")
 if FileExist(strFileToLoad)
 {
 	GuiControl, 1:Show, btnPreviewFile
@@ -656,6 +644,7 @@ GuiControl, 1:Show, strMultiPurpose
 GuiControl, 1:, strMultiPurpose
 GuiControl, 1:Show, btnMultiPurpose
 GuiControl, 1:, btnMultiPurpose, Change default width
+GuiControl, 1:, strFileToExport, % NewFileName(strFileToLoad, "-EXPORT", "txt")
 strRealFieldDelimiter1 := StrMakeRealFieldDelimiter(strFieldDelimiter1)
 objCurrentHeader := ReturnDSVObjectArray(strCurrentHeader, strRealFieldDelimiter1, strFieldEncapsulator1)
 ; strFieldDelimiter1 et strFieldEncapsulator1 pour la lecture de strCurrentHeader
@@ -678,14 +667,7 @@ GuiControl, 1:Show, strMultiPurpose
 GuiControl, 1:, strMultiPurpose
 GuiControl, 1:Show, btnMultiPurpose
 GuiControl, 1:, btnMultiPurpose, Select HTML template
-SplitPath, strFileToLoad, , strOutDir, strOutExtension, strOutNameNoExt
-loop
-{
-	strNewName := strOutDir . "\" . strOutNameNoExt . " (" . A_Index  . ").html"
-	if !FileExist(strNewName)
-		break
-}
-GuiControl, 1:, strFileToExport, %strNewName%
+GuiControl, 1:, strFileToExport, % NewFileName(strFileToLoad, "-EXPORT", "html")
 return
 
 
@@ -696,17 +678,29 @@ GuiControl, 1:Hide, lblMultiPurpose
 GuiControl, 1:Hide, strMultiPurpose
 GuiControl, 1:, strMultiPurpose
 GuiControl, 1:Hide, btnMultiPurpose
+GuiControl, 1:, strFileToExport, % NewFileName(strFileToLoad, "-EXPORT", "xml")
 return
 
 
 
-ClickRadOther:
+ClickRadExpress:
 Gui, 1:Submit, NoHide
 GuiControl, 1:Show, lblMultiPurpose
-GuiControl, 1:, lblMultiPurpose, Row template:
+GuiControl, 1:, lblMultiPurpose, Express template:
 GuiControl, 1:Show, strMultiPurpose
 GuiControl, 1:, strMultiPurpose
 GuiControl, 1:Hide, btnMultiPurpose
+GuiControl, 1:, strFileToExport, % NewFileName(strFileToLoad, "-EXPORT", "txt")
+strRealFieldDelimiter1 := StrMakeRealFieldDelimiter(strFieldDelimiter1)
+objCurrentHeader := ReturnDSVObjectArray(strCurrentHeader, strRealFieldDelimiter1, strFieldEncapsulator1)
+; strFieldDelimiter1 et strFieldEncapsulator1 pour la lecture de strCurrentHeader
+strRealFieldDelimiter3 := StrMakeRealFieldDelimiter(strFieldDelimiter3)
+strMultiPurpose := ""
+Loop, % objCurrentHeader.MaxIndex()
+	strMultiPurpose := strMultiPurpose . strTemplateDelimiter . Format4CSV(objCurrentHeader[A_Index], strRealFieldDelimiter3, strFieldEncapsulator3) . strTemplateDelimiter . A_Space
+	; strFieldDelimiter3 et strFieldEncapsulator3 pour l'écriture
+StringTrimRight, strMultiPurpose, strMultiPurpose, 1 ; remove extra delimiter
+GuiControl, 1:, strMultiPurpose, % StrEscape(strMultiPurpose)
 return
 
 
@@ -721,6 +715,10 @@ Pour tous (sauf HTML): eol remplacement du tab 3
 Pour quels? Delimiters?
 
 Pour HTML: délimiteur du template: ¤ (ASCII 164)
+
+
+Pour Express
+`t`r`n`f
 
 */
 return
@@ -752,17 +750,8 @@ else if (radHTML)
 		return
 	GuiControl, 1:, strMultiPurpose, %strHtmlTemplateFile%
 }
-else if (radXML)
-{
-}
-else if (radOther)
-{
-}
-return
-
-
-
-###:
+; else if (radXML)
+; else if (radExpress)
 return
 
 
@@ -791,8 +780,14 @@ else if (radHTML)
 	}
 else if (radXML)
 	Gosub, ExportXML
-else if (radOther)
-	###_D("Other")
+else if (radExpress)
+	if StrLen(strMultiPurpose)
+		Gosub, ExportExpress
+	else
+	{
+		MsgBox, 48, %strApplicationName%, First enter the row template in the "Express template:" zone.
+		return
+	}
 else
 	MsgBox, 48, %strApplicationName%, Select the Export format.
 return
@@ -1056,8 +1051,8 @@ if (radFixed)
 	Gosub, ClickRadFixed
 else if (radHTML)
 	Gosub, ClickRadHTML
-else if (radOther)
-	Gosub, ClickRadOther
+else if (radExpress)
+	Gosub, ClickRadExpress
 return
 
 
@@ -1118,7 +1113,7 @@ ExportHTML:
 ; ObjCSV_ListView2Collection([strGuiID = "", strListViewID = "", strFieldOrder = "", strFieldDelimiter = ",", strEncapsulator = """", blnProgress = 0])
 obj := ObjCSV_ListView2Collection("1", "lvData", , , , 1)
 ; ObjCSV_Collection2HTML(objCollection, strFilePath, strTemplateFile [, strTemplateEncapsulator = ~, blnProgress = 0, blnOverwrite = 0])
-ObjCSV_Collection2HTML(obj, strFileToExport, strMultiPurpose, "¤", 0, 1)
+ObjCSV_Collection2HTML(obj, strFileToExport, strMultiPurpose, strTemplateDelimiter, 0, 1)
 if FileExist(strFileToExport)
 {
 	GuiControl, 1:Show, btnCheckExportFile
@@ -1135,6 +1130,29 @@ ExportXML:
 obj := ObjCSV_ListView2Collection("1", "lvData", , , , 1)
 ; ObjCSV_Collection2XML(objCollection, strFilePath [, blnProgress = 0, blnOverwrite = 0])
 ObjCSV_Collection2XML(obj, strFileToExport, 0, 1)
+if FileExist(strFileToExport)
+{
+	GuiControl, 1:Show, btnCheckExportFile
+	GuiControl, 1:+Default, btnCheckExportFile
+	GuiControl, 1:Focus, btnCheckExportFile
+}
+obj := ; release object
+return
+
+
+
+ExportExpress:
+; ObjCSV_ListView2Collection([strGuiID = "", strListViewID = "", strFieldOrder = "", strFieldDelimiter = ",", strEncapsulator = """", blnProgress = 0])
+obj := ObjCSV_ListView2Collection("1", "lvData", , , , 1)
+; ObjCSV_Collection2HTML(objCollection, strFilePath, strTemplateFile [, strTemplateEncapsulator = ~, blnProgress = 0, blnOverwrite = 0])
+strExpressTemplateTempFile := GUID() . ".TMP"
+strExpressTemplate := strTemplateDelimiter . "ROWS" . strTemplateDelimiter
+strExpressTemplate := strExpressTemplate  . strMultiPurpose
+strExpressTemplate := strExpressTemplate  . strTemplateDelimiter . "/ROWS" . strTemplateDelimiter
+strExpressTemplate := StrUnEscape(strExpressTemplate)
+FileAppend, %strExpressTemplate%, %strExpressTemplateTempFile%
+ObjCSV_Collection2HTML(obj, strFileToExport, strExpressTemplateTempFile, strTemplateDelimiter, 0, 1)
+FileDelete, %strExpressTemplateTempFile%
 if FileExist(strFileToExport)
 {
 	GuiControl, 1:Show, btnCheckExportFile
@@ -1250,3 +1268,44 @@ CheckIfFileExistOverwrite(strFileName)
 			return -1
 	}
 }
+
+
+
+NewFileName(strExistingFile, strNote := "", strExtension := "")
+{
+	SplitPath, strExistingFile, , strOutDir, strOutExtension, strOutNameNoExt
+	if !StrLen(strExtension)
+		strExtension := strOutExtension
+	loop
+	{
+		strNewName := strOutDir . "\" . strOutNameNoExt . strNote . " (" . A_Index  . ")." . strExtension
+		if !FileExist(strNewName)
+			break
+	}
+	return strNewName
+}
+
+
+
+GUID()         ; 32 hex digits = 128-bit Globally Unique ID
+; Source: Laszlo in http://www.autohotkey.com/board/topic/5362-more-secure-random-numbers/
+{
+   format = %A_FormatInteger%       ; save original integer format
+   SetFormat Integer, Hex           ; for converting bytes to hex
+   VarSetCapacity(A,16)
+   DllCall("rpcrt4\UuidCreate","Str",A)
+   Address := &A
+   Loop 16
+   {
+      x := 256 + *Address           ; get byte in hex, set 17th bit
+      StringTrimLeft x, x, 3        ; remove 0x1
+      h = %x%%h%                    ; in memory: LS byte first
+      Address++
+   }
+   SetFormat Integer, %format%      ; restore original format
+   Return h
+}
+
+
+
+
