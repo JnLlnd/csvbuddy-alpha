@@ -29,7 +29,8 @@ Gui, 1:Font, s12 w700, Verdana
 Gui, 1:Add, Text, x10, %strApplicationName%
 
 Gui, 1:Font, s10 w700, Verdana
-Gui, 1:Add, Tab2, w950 r4 vtabCSVBuddy gChangedTabCSVBuddy, % " 1) Load CSV File     ||     2) Edit Columns     |     3) Save CSV File     |     4) Export     |     About     "
+Gui, 1:Add, Tab2, w950 r4 vtabCSVBuddy gChangedTabCSVBuddy
+	, % " 1) Load CSV File     ||     2) Edit Columns     |     3) Save CSV File     |     4) Export     |     About     "
 Gui, 1:Font
 
 Gui, 1:Tab, 1
@@ -103,15 +104,25 @@ Gui, 1:Add, Radio,		yp		x+15	vradHTML gClickRadHTML, HTML
 Gui, 1:Add, Radio,		yp		x+15	vradXML gClickRadXML, XML
 Gui, 1:Add, Radio,		yp		x+15	vradExpress gClickRadExpress, Express
 Gui, 1:Add, Button,		yp		x+15	vbtnHelpExportFormat gButtonHelpExportFormat, ?
-Gui, 1:Add, Button,		yp		x+15	vbtnHelpExportMulti gButtonHelpExportMulti Hidden, Lorem ipsum dolor sitm ; conserver texte important pour la largeur du bouton
+Gui, 1:Add, Button,		yp		x+15	vbtnHelpExportMulti gButtonHelpExportMulti Hidden
+	, Lorem ipsum dolor sitm ; conserver texte important pour la largeur du bouton
 Gui, 1:Add, Text,		y+10	x10		vlblMultiPurpose w85 right hidden, Hidden Label:
 Gui, 1:Add, Edit,		yp		x100	vstrMultiPurpose gChangedMultiPurpose hidden
-Gui, 1:Add, Button,		yp		x+5		vbtnMultiPurpose gButtonMultiPurpose hidden, Lorem ipsum dolor sitm ; conserver texte important pour la largeur du bouton
+Gui, 1:Add, Button,		yp		x+5		vbtnMultiPurpose gButtonMultiPurpose hidden
+	, Lorem ipsum dolor sitm ; conserver texte important pour la largeur du bouton
 Gui, 1:Add, Button,		y105	x+5		vbtnExportFile gButtonExportFile hidden, Export
 Gui, 1:Add, Button,		y137	x+5		vbtnCheckExportFile gButtonCheckExportFile hidden, Check
 
 Gui, 1:Tab, 5
-Gui, 1:Add, Link,		y+10	x10		vlblAboutText, <a href="https://bitbucket.org/JnLlnd/csvbuddy">%strApplicationName% %strApplicationVersion%</a>`nby Jean Lalonde (<a href="http://www.autohotkey.com/board/user/4880-jnllnd/">JnLlnd</a> on AHK forum)`nAll rights reserved (c)2013 - DO NOT DISTRIBUTE WITHOUT AUTHOR AUTORIZATION`n`nUsing AHK library: <a href="https://www.github.com/JnLlnd/ObjCSV">ObjCSV v0.2</a>`nUsing icon by: <a href="http://www.visualpharm.com">Visual Pharm</a>
+Gui, 1:Add, Link,		y+10	x10		vlblAboutText,
+(
+<a href="https://bitbucket.org/JnLlnd/csvbuddy">%strApplicationName% %strApplicationVersion%</a>
+`nby Jean Lalonde (<a href="http://www.autohotkey.com/board/user/4880-jnllnd/">JnLlnd</a> on AHK forum)
+`nAll rights reserved (c)2013 - DO NOT DISTRIBUTE WITHOUT AUTHOR AUTORIZATION
+
+`n`nUsing AHK library: <a href="https://www.github.com/JnLlnd/ObjCSV">ObjCSV v0.2</a>
+`nUsing icon by: <a href="http://www.visualpharm.com">Visual Pharm</a>
+)
 
 Gui, 1:Tab
 
@@ -388,16 +399,23 @@ if LV_GetCount("Column")
 	}
 	IfMsgBox, No
 	{
-		MsgBox, 36, %strApplicationName%, If the CSV file you want to load have the same fields, in the same order, you can add file data to the current list.`n`nDo you want to add to the content of this file to the list?
+		MsgBox, 36, %strApplicationName%,
+			(
+			If the CSV file you want to load have the same fields, in the same order, you can add file data to the current list.
+			`nDo you want to add to the content of this file to the list?
+			)
 		IfMsgBox, No
 			return
 	}
 }
 strCurrentHeader := StrUnEscape(strFileHeaderEscaped)
 strRealFieldDelimiter1 := StrMakeRealFieldDelimiter(strFieldDelimiter1)
-; ObjCSV_CSV2Collection(strFilePath, ByRef strFieldNames [, blnHeader = 1, blnMultiline = 1, blnProgress = 0, strFieldDelimiter = ",", strEncapsulator = """", strRecordDelimiter = "`n", strOmitChars = "`r", strEolReplacement = ""])
-obj := ObjCSV_CSV2Collection(strFileToLoad, strCurrentHeader, radGetHeader, blnMultiline1, 1, strRealFieldDelimiter1, strFieldEncapsulator1, , , strEndoflineReplacement1)
-; ObjCSV_Collection2ListView(objCollection [, strGuiID = "", strListViewID = "", strFieldOrder = "", strFieldDelimiter = ",", strEncapsulator = """", strSortFields = "", strSortOptions = "", blnProgress = 0])
+; ObjCSV_CSV2Collection(strFilePath, ByRef strFieldNames [, blnHeader = 1, blnMultiline = 1, blnProgress = 0, strFieldDelimiter = ","
+; 	, strEncapsulator = """", strRecordDelimiter = "`n", strOmitChars = "`r", strEolReplacement = ""])
+obj := ObjCSV_CSV2Collection(strFileToLoad, strCurrentHeader, radGetHeader, blnMultiline1, 1, strRealFieldDelimiter1, strFieldEncapsulator1
+	, , , strEndoflineReplacement1)
+; ObjCSV_Collection2ListView(objCollection [, strGuiID = "", strListViewID = "", strFieldOrder = "", strFieldDelimiter = ","
+;	, strEncapsulator = """", strSortFields = "", strSortOptions = "", blnProgress = 0])
 ObjCSV_Collection2ListView(obj, "1", "lvData", strCurrentHeader, strRealFieldDelimiter1, strFieldEncapsulator1, , , 1)
 if !LV_GetCount()
 {
@@ -411,9 +429,11 @@ else
 	(Join`s
 	Your CSV file is loaded.
 	
-	`n`nYou can sort rows by clicking on column headers. Choose sorting type: alphabetical, numeric integer or numeric float, ascending or descending.
+	`n`nYou can sort rows by clicking on column headers. Choose sorting type: alphabetical, numeric integer or numeric float,
+	ascending or descending.
 	
-	`n`nDouble-click on a row to edit a record.  Right-click anywhere in the list view to select all rows, deselect all rows or reverse selection.
+	`n`nDouble-click on a row to edit a record.  Right-click anywhere in the list view to select all rows, deselect all rows
+	or reverse selection.
 	
 	`n`nYou can use the "2) Edit Columns" tab to edit field names, select fields to keep or change fields order.
 	
@@ -439,7 +459,13 @@ if !LV_GetCount()
 }
 if !StrLen(strRenameEscaped)
 {
-	MsgBox, 52, %strApplicationName%, In "Rename fields:", enter the list of field names separated by the field delimiter ( %strFieldDelimiter1% ). Field names are automatically filled when you load a CSV file in the first tab.`n`nIf no field names are provided, numbers are used as field names. Do you want to use numbers as field names? 
+	MsgBox, 52, %strApplicationName%,
+	(
+	In "Rename fields:", enter the list of field names separated by the field delimiter ( %strFieldDelimiter1% ).
+	Field names are automatically filled when you load a CSV file in the first tab.
+	
+	`n`nIf no field names are provided, numbers are used as field names. Do you want to use numbers as field names? 
+	)
 	IfMsgBox, No
 		return
 }
@@ -462,12 +488,13 @@ ButtonHelpRename:
 Gui, 1:Submit, NoHide
 strHelp =
 (Join`s
-To change field names (column headers), enter a new name for each fields, in the order they actually appear in the list, separated by the field delimiter
-( %strFieldDelimiter1% ) and click "Rename".
+To change field names (column headers), enter a new name for each fields, in the order they actually appear in the list,
+separated by the field delimiter ( %strFieldDelimiter1% ) and click "Rename".
 
 `n`nIf you enter less names than the number of fields (or no field name at all), numbers are used as field names for remaining columns.
 
-`n`nField names including the separator character ( %strFieldDelimiter1% ) must be enclosed by the encapsulator character ( %strFieldEncapsulator1% ).
+`n`nField names including the separator character ( %strFieldDelimiter1% ) must be enclosed by the encapsulator character
+( %strFieldEncapsulator1% ).
 
 `n`nTo save the file, click on the tab "3) Save CSV File".
 )
@@ -480,7 +507,13 @@ ButtonSetSelect:
 Gui, 1:Submit, NoHide
 if !StrLen(strSelectEscaped)
 {
-	MsgBox, 48, %strApplicationName%, First enter the names of the fields you want to keep in the list, separated by the field delimiter ( %strFieldDelimiter1% ), keeping their current order.`n`nField names are automatically filled when you load a CSV file in the fisrt tab.
+	MsgBox, 48, %strApplicationName%, 
+	(
+	First enter the names of the fields you want to keep in the list, separated by the field delimiter ( %strFieldDelimiter1% ),
+	keeping their current order.
+	
+	`n`nField names are automatically filled when you load a CSV file in the fisrt tab.
+	)
 	return
 }
 if !LV_GetCount()
@@ -538,13 +571,21 @@ return
 
 ButtonSetOrder:
 /*
-ObjCSV_Collection2ListView(objCollection, strGuiID := "", strListViewID := "", strFieldOrder := "", strFieldDelimiter := ",", strEncapsulator := """", strSortFields := "", strSortOptions := "", blnProgress := 0)
-ObjCSV_ListView2Collection(strGuiID := "", strListViewID := "", strFieldOrder := "", strFieldDelimiter := ",", strFieldEncapsulator := """", blnProgress := 0)
+ObjCSV_Collection2ListView(objCollection, strGuiID := "", strListViewID := "", strFieldOrder := "", strFieldDelimiter := ","
+	, strEncapsulator := """", strSortFields := "", strSortOptions := "", blnProgress := 0)
+ObjCSV_ListView2Collection(strGuiID := "", strListViewID := "", strFieldOrder := "", strFieldDelimiter := ","
+	, strFieldEncapsulator := """", blnProgress := 0)
 */
 Gui, 1:Submit, NoHide
 if !StrLen(strSelectEscaped)
 {
-	MsgBox, 48, %strApplicationName%, First enter the names of the fields you want to keep in the list, in the desired order, separated by the field delimiter ( %strFieldDelimiter1% ).`n`nField names are automatically filled when you load a CSV file in the fisrt tab.
+	MsgBox, 48, %strApplicationName%,
+	(
+	First enter the names of the fields you want to keep in the list, in the desired order,
+	separated by the field delimiter ( %strFieldDelimiter1% ).
+	
+	`n`nField names are automatically filled when you load a CSV file in the fisrt tab.
+	)
 	return
 }
 if !LV_GetCount()
@@ -553,11 +594,13 @@ if !LV_GetCount()
 	return
 }
 strRealFieldDelimiter1 := StrMakeRealFieldDelimiter(strFieldDelimiter1)
-objNewCollection := ObjCSV_ListView2Collection("1", "lvData", StrUnEscape(strOrderEscaped), strRealFieldDelimiter1, strFieldEncapsulator1, 1)
+objNewCollection := ObjCSV_ListView2Collection("1", "lvData", StrUnEscape(strOrderEscaped), strRealFieldDelimiter1
+	, strFieldEncapsulator1, 1)
 LV_Delete() ;  better performance on large files when we delete rows before columns
 loop, % LV_GetCount("Column")
 	LV_DeleteCol(1) ; delete all rows
-ObjCSV_Collection2ListView(objNewCollection, "1", "lvData", StrUnEscape(strOrderEscaped), strRealFieldDelimiter1, strFieldEncapsulator1, , , 1)
+ObjCSV_Collection2ListView(objNewCollection, "1", "lvData", StrUnEscape(strOrderEscaped), strRealFieldDelimiter1
+	, strFieldEncapsulator1, , , 1)
 gosub UpdateCurrentHeader
 objNewCollection := ; release object
 return
@@ -568,13 +611,15 @@ ButtonHelpOrder:
 Gui, 1:Submit, NoHide
 strHelp =
 (Join`s
-To change the order of fields (columns) in the list, enter the name of fields in the new order you want to apply, separated by the field
-delimiter ( %strFieldDelimiter1% ) and click "Order".
+To change the order of fields (columns) in the list, enter the name of fields in the new order you want to apply,
+separated by the field delimiter ( %strFieldDelimiter1% ) and click "Order".
 
-`n`nField names including the separator character ( %strFieldDelimiter1% ) must be enclosed by the encapsulator character ( %strFieldEncapsulator1% ).
+`n`nField names including the separator character ( %strFieldDelimiter1% ) must be enclosed by the encapsulator character
+( %strFieldEncapsulator1% ).
 
-`n`nIf you enter less fields than in the original header, fields not included in the new order are removed from the list. However, if you only
-want to remove fields from the list (without changing the order), the "Select" button gives better performance on large files.
+`n`nIf you enter less fields than in the original header, fields not included in the new order are removed from the list.
+However, if you only want to remove fields from the list (without changing the order), the "Select" button gives better
+performance on large files.
 
 `n`nTo save the file, click on the last tab "3) Save CSV File" and select the destination file.
 )
@@ -589,8 +634,9 @@ return
 ButtonHelpFileToSave:
 strHelp =
 (Join`s
-Enter the name of the CSV file destination file (the current program's directory is used if an absolute path isn't specified) or hit "Select"
-to choose the CSV destination file. When other options are OK, hit "Save" to save all or selected rows to the CSV file.
+Enter the name of the CSV file destination file (the current program's directory is used if an absolute path isn't specified)
+or hit "Select" to choose the CSV destination file. When other options are OK, hit "Save" to save all or selected rows to the
+CSV file.
 
 `n`nNote that all rows are saved by default. You can select one row (using Click), a series of adjacent rows (using Shift-Click)
 or non contiguous rows (using Ctrl-Click or Shift-Ctrl-Click).
@@ -634,7 +680,8 @@ return
 ButtonHelpFieldDelimiter3:
 strHelp =
 (Join`s
-Each field in the CSV header or in data rows of the file must be separated by a field delimiter. Enter the field delimiter character to use in the saved file.
+Each field in the CSV header or in data rows of the file must be separated by a field delimiter. Enter the field delimiter
+character to use in the saved file.
 
 `n`nIt can be comma ( , ), semicolon ( `; ), Tab or any single character.
 
@@ -733,14 +780,17 @@ blnOverwrite := CheckIfFileExistOverwrite(strFileToSave)
 if (blnOverwrite < 0)
 	return
 gosub, CheckOneRow
-; ObjCSV_ListView2Collection([strGuiID = "", strListViewID = "", strFieldOrder = "", strFieldDelimiter = ",", strEncapsulator = """", blnProgress = 0])
+; ObjCSV_ListView2Collection([strGuiID = "", strListViewID = "", strFieldOrder = "", strFieldDelimiter = ","
+;	, strEncapsulator = """", blnProgress = 0])
 obj := ObjCSV_ListView2Collection("1", "lvData", , , , 1)
 if (radSaveMultiline)
 	strEolReplacement := ""
 else
 	strEolReplacement := strEndoflineReplacement3
-; ObjCSV_Collection2CSV(objCollection, strFilePath [, blnHeader = 0, strFieldOrder = "", blnProgress = 0, blnOverwrite = 0, strFieldDelimiter = ",", strEncapsulator = """", strEndOfLine = "`n", strEolReplacement = ""])
-ObjCSV_Collection2CSV(obj, strFileToSave, radSaveWithHeader, GetHeader(strFieldDelimiter3, strFieldEncapsulator3), 1, blnOverwrite, StrMakeRealFieldDelimiter(strFieldDelimiter3), strFieldEncapsulator3, , strEolReplacement)
+; ObjCSV_Collection2CSV(objCollection, strFilePath [, blnHeader = 0, strFieldOrder = "", blnProgress = 0, blnOverwrite = 0
+;	, strFieldDelimiter = ",", strEncapsulator = """", strEndOfLine = "`n", strEolReplacement = ""])
+ObjCSV_Collection2CSV(obj, strFileToSave, radSaveWithHeader, GetHeader(strFieldDelimiter3, strFieldEncapsulator3), 1, blnOverwrite
+	, StrMakeRealFieldDelimiter(strFieldDelimiter3), strFieldEncapsulator3, , strEolReplacement)
 if FileExist(strFileToSave)
 {
 	GuiControl, 1:Show, btnCheckFile
@@ -764,13 +814,15 @@ return
 ButtonHelpFileToExport:
 strHelp =
 (Join`s
-Enter the name of the destination file of the export (the current program's directory is used if an absolute path isn't specified) or hit "Select"
-to choose the destination file. When other options are OK, hit "Export" to export all or selected rows to the destination file.
+Enter the name of the destination file of the export (the current program's directory is used if an absolute path isn't specified)
+or hit "Select" to choose the destination file. When other options are OK, hit "Export" to export all or selected rows to the
+destination file.
 
-`n`nNote that all rows are saved by default. You can select one row (using Click), a series of adjacent rows (using Shift-Click) or non contiguous rows
-(using Ctrl-Click or Shift-Ctrl-Click).
+`n`nNote that all rows are saved by default. You can select one row (using Click), a series of adjacent rows (using Shift-Click)
+or non contiguous rows (using Ctrl-Click or Shift-Ctrl-Click).
 
-`n`nFields are exported in the order they appear in the list and rows are saved according to the current sorting order (click on a column name to sort rows).
+`n`nFields are exported in the order they appear in the list and rows are saved according to the current sorting order (click on
+a column name to sort rows).
 )
 Help("Export data", strHelp)
 return
@@ -822,7 +874,8 @@ objCurrentHeader := ReturnDSVObjectArray(strCurrentHeader, strRealFieldDelimiter
 strRealFieldDelimiter3 := StrMakeRealFieldDelimiter(strFieldDelimiter3)
 strMultiPurpose := ""
 Loop, % objCurrentHeader.MaxIndex()
-	strMultiPurpose := strMultiPurpose . Format4CSV(objCurrentHeader[A_Index], strRealFieldDelimiter3, strFieldEncapsulator3) . strRealFieldDelimiter3 . intDefaultWidth . strRealFieldDelimiter3
+	strMultiPurpose := strMultiPurpose . Format4CSV(objCurrentHeader[A_Index]
+		, strRealFieldDelimiter3, strFieldEncapsulator3) . strRealFieldDelimiter3 . intDefaultWidth . strRealFieldDelimiter3
 	; strFieldDelimiter3 et strFieldEncapsulator3 pour l'écriture
 StringTrimRight, strMultiPurpose, strMultiPurpose, 1 ; remove extra delimiter
 GuiControl, 1:, strMultiPurpose, % StrEscape(strMultiPurpose)
@@ -874,7 +927,8 @@ objCurrentHeader := ReturnDSVObjectArray(strCurrentHeader, strRealFieldDelimiter
 strRealFieldDelimiter3 := StrMakeRealFieldDelimiter(strFieldDelimiter3)
 strMultiPurpose := ""
 Loop, % objCurrentHeader.MaxIndex()
-	strMultiPurpose := strMultiPurpose . strTemplateDelimiter . Format4CSV(objCurrentHeader[A_Index], strRealFieldDelimiter3, strFieldEncapsulator3) . strTemplateDelimiter . A_Space
+	strMultiPurpose := strMultiPurpose . strTemplateDelimiter . Format4CSV(objCurrentHeader[A_Index]
+		, strRealFieldDelimiter3, strFieldEncapsulator3) . strTemplateDelimiter . A_Space
 	; strFieldDelimiter3 et strFieldEncapsulator3 pour l'écriture
 StringTrimRight, strMultiPurpose, strMultiPurpose, 1 ; remove extra delimiter
 GuiControl, 1:, strMultiPurpose, % StrEscape(strMultiPurpose)
@@ -950,7 +1004,8 @@ Gui, 1:Submit, NoHide
 Gui, 1:+OwnDialogs 
 if (radFixed)
 {
-	InputBox, intNewDefaultWidth, %strApplicationName% (%strApplicationVersion%) - Default fixed width, Enter the new default width:, , , 120, , , , , %intDefaultWidth%
+	InputBox, intNewDefaultWidth, %strApplicationName% (%strApplicationVersion%) - Default fixed width
+		, Enter the new default width:, , , 120, , , , , %intDefaultWidth%
 	if !ErrorLevel
 		if (intNewDefaultWidth > 0)
 			intDefaultWidth := intNewDefaultWidth
@@ -982,7 +1037,8 @@ if (radFixed)
 		Gosub, ExportFixed
 	else
 	{
-		MsgBox, 48, %strApplicationName%, Fill the "Fields width" zone with fields names and width separated by the field delimiter ( %strFieldDelimiter3% ).
+		MsgBox, 48, %strApplicationName%
+			, Fill the "Fields width" zone with fields names and width separated by the field delimiter ( %strFieldDelimiter3% ).
 		return
 	}
 else if (radHTML)
@@ -1275,7 +1331,12 @@ return
 CheckOneRow:
 if (LV_GetCount("Selected") = 1)
 {
-	MsgBox, 35, %strApplicationName% - One record selected, Only one record is selected. Do you want to save only this record?`n`nYes: Only one record will be saved.`nNo: All records will be saved.
+	MsgBox, 35, %strApplicationName% - One record selected,
+	(
+	Only one record is selected. Do you want to save only this record?
+	
+	`n`nYes: Only one record will be saved.`nNo: All records will be saved.
+	)
 	IfMsgBox, No
 		LV_Modify(0, "Select") ; select all records
 	IfMsgBox, Cancel
@@ -1286,9 +1347,11 @@ return
 
 
 ExportFixed:
-; ObjCSV_ListView2Collection([strGuiID = "", strListViewID = "", strFieldOrder = "", strFieldDelimiter = ",", strEncapsulator = """", blnProgress = 0])
+; ObjCSV_ListView2Collection([strGuiID = "", strListViewID = "", strFieldOrder = "", strFieldDelimiter = ","
+;	, strEncapsulator = """", blnProgress = 0])
 obj := ObjCSV_ListView2Collection("1", "lvData", , , , 1)
-strRealFieldDelimiter3 := StrMakeRealFieldDelimiter(strFieldDelimiter3) ; strFieldDelimiter3 et strFieldEncapsulator3 pour l'écriture de l'entête seulement
+; strFieldDelimiter3 et strFieldEncapsulator3 pour l'écriture de l'entête seulement
+strRealFieldDelimiter3 := StrMakeRealFieldDelimiter(strFieldDelimiter3)
 objFieldsArray := ReturnDSVObjectArray(StrUnEscape(strMultiPurpose), strRealFieldDelimiter3, strFieldEncapsulator3)
 strFieldsName := ""
 strFieldsWidth := ""
@@ -1311,8 +1374,10 @@ if (radSaveMultiline)
 	strEolReplacement := ""
 else
 	strEolReplacement := strEndoflineReplacement
-; ObjCSV_Collection2Fixed(objCollection, strFilePath, strFieldsWidth, blnHeader := 0, strFieldOrder := "", blnProgress := 0, blnOverwrite := 0, strFieldDelimiter := ",", strEncapsulator := """", strEndOfLine := "`r`n", strEolReplacement := "")
-ObjCSV_Collection2Fixed(obj, strFileToExport, strFieldsWidth, radSaveWithHeader, strFieldsName, 1, blnOverwrite, strRealFieldDelimiter3, strFieldEncapsulator3, , strEolReplacement)
+; ObjCSV_Collection2Fixed(objCollection, strFilePath, strFieldsWidth, blnHeader := 0, strFieldOrder := "", blnProgress := 0
+;	, blnOverwrite := 0, strFieldDelimiter := ",", strEncapsulator := """", strEndOfLine := "`r`n", strEolReplacement := "")
+ObjCSV_Collection2Fixed(obj, strFileToExport, strFieldsWidth, radSaveWithHeader, strFieldsName, 1, blnOverwrite
+	, strRealFieldDelimiter3, strFieldEncapsulator3, , strEolReplacement)
 if FileExist(strFileToExport)
 {
 	GuiControl, 1:Show, btnCheckExportFile
@@ -1325,9 +1390,9 @@ return
 
 
 ExportHTML:
-; ObjCSV_ListView2Collection([strGuiID = "", strListViewID = "", strFieldOrder = "", strFieldDelimiter = ",", strEncapsulator = """", blnProgress = 0])
 obj := ObjCSV_ListView2Collection("1", "lvData", , , , 1)
-; ObjCSV_Collection2HTML(objCollection, strFilePath, strTemplateFile [, strTemplateEncapsulator = ~, blnProgress = 0, blnOverwrite = 0])
+; ObjCSV_Collection2HTML(objCollection, strFilePath, strTemplateFile [, strTemplateEncapsulator = ~
+;	, blnProgress = 0, blnOverwrite = 0])
 ObjCSV_Collection2HTML(obj, strFileToExport, strMultiPurpose, strTemplateDelimiter, 0, 1)
 if FileExist(strFileToExport)
 {
@@ -1341,7 +1406,6 @@ return
 
 
 ExportXML:
-; ObjCSV_ListView2Collection([strGuiID = "", strListViewID = "", strFieldOrder = "", strFieldDelimiter = ",", strEncapsulator = """", blnProgress = 0])
 obj := ObjCSV_ListView2Collection("1", "lvData", , , , 1)
 ; ObjCSV_Collection2XML(objCollection, strFilePath [, blnProgress = 0, blnOverwrite = 0])
 ObjCSV_Collection2XML(obj, strFileToExport, 0, 1)
@@ -1357,9 +1421,9 @@ return
 
 
 ExportExpress:
-; ObjCSV_ListView2Collection([strGuiID = "", strListViewID = "", strFieldOrder = "", strFieldDelimiter = ",", strEncapsulator = """", blnProgress = 0])
 obj := ObjCSV_ListView2Collection("1", "lvData", , , , 1)
-; ObjCSV_Collection2HTML(objCollection, strFilePath, strTemplateFile [, strTemplateEncapsulator = ~, blnProgress = 0, blnOverwrite = 0])
+; ObjCSV_Collection2HTML(objCollection, strFilePath, strTemplateFile [, strTemplateEncapsulator = ~
+;	, blnProgress = 0, blnOverwrite = 0])
 strExpressTemplateTempFile := GUID() . ".TMP"
 strExpressTemplate := strTemplateDelimiter . "ROWS" . strTemplateDelimiter
 strExpressTemplate := strExpressTemplate  . strMultiPurpose
@@ -1459,7 +1523,8 @@ ShrinkEditControl(strEditHandle, intMaxRows, strGuiName)
 		intOriginalHeight := intPosEditH
 		intHeightOneRow := Round((intOriginalHeight - intEditMargin) / intNbRows)
 		intNewHeight := (intHeightOneRow * intMaxRows) + intEditMargin
-		; MsgBox, % "intNbRows: " . intNbRows . "`nintOriginalHeight: " . intOriginalHeight . "`nintHeightOneRow: " . intHeightOneRow . "`nintNewHeight: " . intNewHeight
+		; MsgBox, % "intNbRows: " . intNbRows . "`nintOriginalHeight: " . intOriginalHeight 
+		;	. "`nintHeightOneRow: " . intHeightOneRow . "`nintNewHeight: " . intNewHeight
 		GuiControl, %strGuiName%:Move, %strEditHandle%, h%intNewHeight%
 	}
 }
@@ -1474,7 +1539,12 @@ CheckIfFileExistOverwrite(strFileName)
 		return True
 	else
 	{
-		MsgBox, 35, %strApplicationName% - File exists, File exists:`n%strFileName%`n`nDo you want to overwrite this file?`n`nYes: The file will be overwritten.`nNo: Data will be added to the existing file.
+		MsgBox, 35, %strApplicationName% - File exists, 
+		(
+		File exists:`n%strFileName%`n`nDo you want to overwrite this file?
+		
+		`n`nYes: The file will be overwritten.`nNo: Data will be added to the existing file.
+		)
 		IfMsgBox, Yes
 			return True
 		IfMsgBox, No
