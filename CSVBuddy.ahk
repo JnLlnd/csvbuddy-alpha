@@ -8,6 +8,7 @@ This script uses the library ObjCSV v0.2 (https://github.com/JnLlnd/ObjCSV)
 
 #NoEnv
 #SingleInstance force
+#LTrim ; omits spaces and tabs at the beginning of each line in continuation sections
 #Include %A_ScriptDir%\..\ObjCSV\lib\ObjCSV.ahk
 
 ; --------------------- GLOBAL AND DEFAULT VALUES --------------------------
@@ -102,6 +103,7 @@ Gui, 1:Add, Radio,		yp		x+15	vradHTML gClickRadHTML, HTML
 Gui, 1:Add, Radio,		yp		x+15	vradXML gClickRadXML, XML
 Gui, 1:Add, Radio,		yp		x+15	vradExpress gClickRadExpress, Express
 Gui, 1:Add, Button,		yp		x+15	vbtnHelpExportFormat gButtonHelpExportFormat, ?
+Gui, 1:Add, Button,		yp		x+15	vbtnHelpExportMulti gButtonHelpExportMulti Hidden, Lorem ipsum dolor sitm ; conserver texte important pour la largeur du bouton
 Gui, 1:Add, Text,		y+10	x10		vlblMultiPurpose w85 right hidden, Hidden Label:
 Gui, 1:Add, Edit,		yp		x100	vstrMultiPurpose gChangedMultiPurpose hidden
 Gui, 1:Add, Button,		yp		x+5		vbtnMultiPurpose gButtonMultiPurpose hidden, Lorem ipsum dolor sitm ; conserver texte important pour la largeur du bouton
@@ -167,7 +169,14 @@ return
 
 
 ButtonHelpFileToLoad:
-Help("CSV File To Load", "Hit ""Select"" to choose the CSV file to load. When other options are OK, hit ""Load"" to import the file in the list below.`n`nNote that a maximum of 200 fields can be loaded.")
+strHelp =
+(Join`s
+Hit "Select" to choose the CSV file to load. When other options are OK, hit "Load"
+to import the file in the list below.
+
+`n`nNote that a maximum of 200 fields can be loaded.
+)
+Help("CSV File To Load", strHelp)
 return
 
 
@@ -209,7 +218,19 @@ return
 
 
 ButtonHelpHeader:
-Help("CSV Header", "Most of the time, the first line of a CSV file contains the CSV header, a list of field names, separated by a field delimiter. If your file contains a CSV Header, select the radio button ""Get CSV Header"". When you select a file (using the ""Select"" button), the ""CSV Header"" zone displays the content of the first line of the file.`n`nNote that invisible characters used as delimiters (for example Tab) are displayed with an escape character. For example, Tabs are shown as ""``t"".`n`nIf the file does not contain a CSV header, select the radio button ""Set CSV Header"" and enter in the ""CSV Header"" zone the field names for each column of data in the file, seperated by the field delimiter.")
+strHelp =
+(Join`s
+Most of the time, the first line of a CSV file contains the CSV header, a list of field names, separated by a field delimiter.
+If your file contains a CSV Header, select the radio button "Get CSV Header". When you select a file (using the "Select" button),
+the "CSV Header" zone displays the content of the first line of the file.
+
+`n`nNote that invisible characters used as delimiters (for example Tab) are displayed with an escape character. For example,
+Tabs are shown as "``t".
+
+`n`nIf the file does not contain a CSV header, select the radio button "Set CSV Header" and enter in the "CSV Header" zone the
+field names for each column of data in the file, seperated by the field delimiter.
+)
+Help("CSV Header", strHelp)
 return
 
 
@@ -246,7 +267,12 @@ return
 
 ButtonHelpSetHeader:
 Gui, 1:Submit, NoHide
-Help("CSV Get/Set CSV Header", "If the first line of the CSV file contains the list of data columns field names, click ""Get header from CSV file"". If not, click ""Set CSV header"" and enter the list of field names separated by the Field delimiter.")
+strHelp =
+(Join`s
+If the first line of the CSV file contains the list of data columns field names, click "Get header from CSV file".
+If not, click "Set CSV header" and enter the list of field names separated by the Field delimiter.
+)
+Help("CSV Get/Set CSV Header", strHelp)
 return
 
 
@@ -260,7 +286,21 @@ return
 
 
 ButtonHelpFieldDelimiter1:
-Help("Field Delimiter", "Each field in the CSV header or in data rows of the file must be separated by a field delimiter. This is often comma ( , ), semicolon ( `; ) or Tab.`n`nEnter any single character such as comma, semicolon or one of these letters for special characters:`n`nt`tTab (HT)`nn`tLinefeed (LF)`nr`tCarriage return (CR)`nf`tFormfeed (FF)`n`nUse the ""Preview"" button to find what is the field delimiter in this file.")
+strHelp =
+(Join`s
+Each field in the CSV header or in data rows of the file must be separated by a field delimiter.
+This is often comma ( , ), semicolon ( `; ) or Tab.
+
+`n`nEnter any single character such as comma, semicolon or one of these letters for special characters:
+
+`n`nt`tTab (HT)
+`nn`tLinefeed (LF)
+`nr`tCarriage return (CR)
+`nf`tFormfeed (FF)
+
+`n`nUse the "Preview" button to find what is the field delimiter in this file.
+)
+Help("Field Delimiter", strHelp)
 return
 
 
@@ -274,7 +314,18 @@ return
 
 
 ButtonHelpEncapsulator1:
-Help("Field Encapsulator", "When data fields in a CSV file contain characters used as delimiter or end-of-line, they must be enclosed in a field encapsulator. This encapsulator is often double-quotes ( ""..."" ) or single quotes ( '...' ). For example, if comma is used as field delimiter in a CSV file, the data field ""Smith, John"" must be encapsulated because it contains a comma.`n`nIf a field contains a character used as encapsulator, this character must be doubled. For example, the data ""John ""Junior"" Smith"" must be stated as ""John """"Junior"""" Smith"").`n`nUse the ""Preview"" button to find what is the field encapsulator in this file.")
+strHelp =
+(Join`s
+When data fields in a CSV file contain characters used as delimiter or end-of-line, they must be enclosed in a field encapsulator.
+This encapsulator is often double-quotes ( "..." ) or single quotes ( '...' ). For example, if comma is used as field delimiter
+in a CSV file, the data field "Smith, John" must be encapsulated because it contains a comma.
+
+`n`nIf a field contains a character used as encapsulator, this character must be doubled. For example, the data "John "Junior" Smith"
+must be stated as "John ""Junior"" Smith").
+
+`n`nUse the "Preview" button to find what is the field encapsulator in this file.
+)
+Help("Field Encapsulator", strHelp)
 return
 
 
@@ -296,7 +347,18 @@ return
 
 
 ButtonHelpMultiline1:
-Help("Multi-line Fields", "Most CSV files do not contain line breaks inside text field. But some do. For example, you can find multi-lines ""Notes"" fields in Google or Outlook contacts exported files.`n`nIf text fields in your CSV file contain line breaks, select this checkbox to turn this option ON. If not, keep it OFF since this will improve loading performance.`n`nIf you turn Multi-line ON, you have the additional option to choose a character (or string) that will be converted to line-breaks if found in the CSV file.")
+strHelp =
+(Join`s
+Most CSV files do not contain line breaks inside text field. But some do. For example, you can find multi-lines "Notes" fields in
+Google or Outlook contacts exported files.
+
+`n`nIf text fields in your CSV file contain line breaks, select this checkbox to turn this option ON.
+If not, keep it OFF since this will improve loading performance.
+
+`n`nIf you turn Multi-line ON, you have the additional option to choose a character (or string) that will be converted to
+line-breaks if found in the CSV file.
+)
+Help("Multi-line Fields", strHelp)
 return
 
 
@@ -345,7 +407,20 @@ if !LV_GetCount()
 else
 {
 	gosub UpdateCurrentHeader
-	Help("Ready to edit","Your CSV file is loaded.`n`nYou can sort rows by clicking on column headers. Choose sorting type: alphabetical, numeric integer or numeric float, ascending or descending.`n`nDouble-click on a row to edit a record.  Right-click anywhere in the list view to select all rows, deselect all rows or reverse selection.`n`nYou can use the ""2) Edit Columns"" tab to edit field names, select fields to keep or change fields order.`n`nWhen you will be ready, change to the ""3) Save CSV File"" tab to save all or selected rows in a new CSV file.")
+	strHelp =
+	(Join`s
+	Your CSV file is loaded.
+	
+	`n`nYou can sort rows by clicking on column headers. Choose sorting type: alphabetical, numeric integer or numeric float, ascending or descending.
+	
+	`n`nDouble-click on a row to edit a record.  Right-click anywhere in the list view to select all rows, deselect all rows or reverse selection.
+	
+	`n`nYou can use the "2) Edit Columns" tab to edit field names, select fields to keep or change fields order.
+	
+	`n`nWhen you will be ready, go to the "3) Save CSV File" tab to save all or selected rows in a new CSV file or
+	to the "4) Export" tab to export your data to fixed-width, HTML or XML format.
+	)
+	Help("Ready to edit", strHelp)
 }
 obj := ; release object
 return
@@ -385,7 +460,18 @@ return
 
 ButtonHelpRename:
 Gui, 1:Submit, NoHide
-Help("Rename Fields", "To change field names (column headers), enter a new name for each fields, in the order they actually appear in the list, separated by the field delimiter ( " . strFieldDelimiter1 . " ) and click ""Rename"".`n`nIf you enter less names than the number of fields (or no field name at all), numbers are used as field names for remaining columns.`n`nField names including the separator character ( " . strFieldDelimiter1 . " ) must be enclosed by the encapsulator character ( " . strFieldEncapsulator1 . " ).`n`nTo save the file, click on the last tab ""3) Save CSV File"".")
+strHelp =
+(Join`s
+To change field names (column headers), enter a new name for each fields, in the order they actually appear in the list, separated by the field delimiter
+( %strFieldDelimiter1% ) and click "Rename".
+
+`n`nIf you enter less names than the number of fields (or no field name at all), numbers are used as field names for remaining columns.
+
+`n`nField names including the separator character ( %strFieldDelimiter1% ) must be enclosed by the encapsulator character ( %strFieldEncapsulator1% ).
+
+`n`nTo save the file, click on the tab "3) Save CSV File".
+)
+Help("Rename Fields", strHelp)
 return
 
 
@@ -435,7 +521,17 @@ return
 
 ButtonHelpSelect:
 Gui, 1:Submit, NoHide
-Help("Select Fields", "To remove fields (columns) from the list, enter the name of fields you want to keep, in the order they actually appear in the list, separated by the field delimiter ( " . strFieldDelimiter1 . " ) and click ""Select"".`n`nField names including the separator character ( " . strFieldDelimiter1 . " ) must be enclosed by the encapsulator character ( " . strFieldEncapsulator1 . " ).`n`nTo save the file, click on the last tab ""3) Save CSV File"".")
+strHelp =
+(Join`s
+To remove fields (columns) from the list, enter the name of fields you want to keep, in the order they actually appear in the list,
+separated by the field delimiter ( %strFieldDelimiter1% ) and click "Select".
+
+`n`nField names including the separator character ( %strFieldDelimiter1% ) must be enclosed by the encapsulator character
+( %strFieldEncapsulator1% ).
+
+`n`nTo save the file, click on the last tab "3) Save CSV File".
+)
+Help("Select Fields", strHelp)
 return
 
 
@@ -470,7 +566,19 @@ return
 
 ButtonHelpOrder:
 Gui, 1:Submit, NoHide
-Help("Order Fields", "To change the order of fields (columns) in the list, enter the name of fields in the new order you want to apply, separated by the field delimiter ( " . strFieldDelimiter1 . " ) and click ""Order"".`n`nField names including the separator character ( " . strFieldDelimiter1 . " ) must be enclosed by the encapsulator character ( " . strFieldEncapsulator1 . " ).`n`nIf you enter less fields than in the original header, fields not included in the new order are removed from the list. However, if you only want to remove fields from the list (without changing the order), the ""Select"" button gives better performance on large files.`n`nTo save the file, click on the last tab ""3) Save CSV File"" and select the destination file.")
+strHelp =
+(Join`s
+To change the order of fields (columns) in the list, enter the name of fields in the new order you want to apply, separated by the field
+delimiter ( %strFieldDelimiter1% ) and click "Order".
+
+`n`nField names including the separator character ( %strFieldDelimiter1% ) must be enclosed by the encapsulator character ( %strFieldEncapsulator1% ).
+
+`n`nIf you enter less fields than in the original header, fields not included in the new order are removed from the list. However, if you only
+want to remove fields from the list (without changing the order), the "Select" button gives better performance on large files.
+
+`n`nTo save the file, click on the last tab "3) Save CSV File" and select the destination file.
+)
+Help("Order Fields", strHelp)
 return
 
 
@@ -479,7 +587,18 @@ return
 
 
 ButtonHelpFileToSave:
-Help("CSV File To Save", "Enter the name of the CSV file destination file (the current program's directory is used if an absolute path isn't specified) or hit ""Select"" to choose the CSV destination file. When other options are OK, hit ""Save"" to save all or selected rows to the CSV file.`n`nNote that all rows are saved by default. You can select one row (using Click), a series of adjacent rows (using Shift-Click) or non contiguous rows (using Ctrl-Click or Shift-Ctrl-Click).`n`nNote that fields are saved in the order they appear in the list and rows are saved according to the current sorting order (click on a column name to sort rows).")
+strHelp =
+(Join`s
+Enter the name of the CSV file destination file (the current program's directory is used if an absolute path isn't specified) or hit "Select"
+to choose the CSV destination file. When other options are OK, hit "Save" to save all or selected rows to the CSV file.
+
+`n`nNote that all rows are saved by default. You can select one row (using Click), a series of adjacent rows (using Shift-Click)
+or non contiguous rows (using Ctrl-Click or Shift-Ctrl-Click).
+
+`n`nNote that fields are saved in the order they appear in the list and rows are saved according to the current sorting order
+(click on a column name to sort rows).
+)
+Help("CSV File To Save", strHelp)
 return
 
 
@@ -513,7 +632,20 @@ return
 
 
 ButtonHelpFieldDelimiter3:
-Help("Field Delimiter", "Each field in the CSV header or in data rows of the file must be separated by a field delimiter. Enter the field delimiter character to use in the saved file.`n`nIt can be comma ( , ), semicolon ( `; ), Tab or any single character.`n`nFor the following special characters, use the letters on the left:`n`nt`tTab (HT)`nn`tLinefeed (LF)`nr`tCarriage return (CR)`nf`tFormfeed (FF)")
+strHelp =
+(Join`s
+Each field in the CSV header or in data rows of the file must be separated by a field delimiter. Enter the field delimiter character to use in the saved file.
+
+`n`nIt can be comma ( , ), semicolon ( `; ), Tab or any single character.
+
+`n`nFor the following special characters, use the letters on the left:
+
+`n`nt`tTab (HT)
+`nn`tLinefeed (LF)
+`nr`tCarriage return (CR)
+`nf`tFormfeed (FF)
+)
+Help("Field Delimiter", strHelp)
 return
 
 
@@ -533,14 +665,31 @@ return
 
 
 ButtonHelpEncapsulator3:
-Help("Field Encapsulator", "When data fields in a CSV file contain characters used as delimiter or end-of-line, they must be enclosed in a field encapsulator. Enter the field encapsulator character to use in the saved file.`n`nThe encapsulator is often double-quotes ( ""..."" ) or single quotes ( '...' ). For example, if comma is used as field delimiter in the saved CSV file, the data field ""Smith, John"" is encapsulated because it contains a comma.`n`nIf a field contains the character used as encapsulator, this character is doubled. For example, the data ""John ""Junior"" Smith"" will be entered as ""John """"Junior"""" Smith"").")
+strHelp =
+(Join`s
+When data fields in a CSV file contain characters used as delimiter or end-of-line, they must be enclosed in a field encapsulator.
+Enter the field encapsulator character to use in the saved file.
+
+`n`nThe encapsulator is often double-quotes ( "..." ) or single quotes ( '...' ). For example, if comma is used as field delimiter
+in the saved CSV file, the data field "Smith, John" is encapsulated because it contains a comma.
+
+`n`nIf a field contains the character used as encapsulator, this character is doubled. For example, the data "John "Junior" Smith"
+will be entered as "John ""Junior"" Smith").
+)
+Help("Field Encapsulator", strHelp)
 return
 
 
 
 ButtonHelpSaveHeader:
 Gui, 1:Submit, NoHide
-Help("CSV Get/Set CSV Header", "To save the field names as the first line of the CSV file, select ""Save with CSV header"".`n`nIf you select ""Save without CSV header"", the first line of the file will contain the data of the first row to save.")
+strHelp =
+(Join`s
+To save the field names as the first line of the CSV file, select "Save with CSV header".
+
+`n`nIf you select "Save without CSV header", the first line of the file will contain the data of the first row to save.
+)
+Help("Save CSV Header", strHelp)
 return
 
 
@@ -563,7 +712,17 @@ return
 
 ButtonHelpSaveMultiline:
 Gui, 1:Submit, NoHide
-Help("Saving multi-line fields", "If text fields contain line breaks, you can decide if line breaks will be saved as is or replaced with a character (or a sequence of characters) in order to keep these fields on a single line.`n`nIf you select ""Save multi-line"", line breaks are saved unchanged.`n`nIf you select ""Save single-line"", enter the replacement sequence for line breaks in the ""End-of-line replacement:"" zone. By default, the replacement character is """ . chr(182) . """ (ASCII code 182).")
+strHelp =
+(Join`s
+If text fields contain line breaks, you can decide if line breaks will be saved as is or replaced with a character (or a sequence of characters)
+in order to keep these fields on a single line.
+
+`n`nIf you select "Save multi-line", line breaks are saved unchanged.
+
+`n`nIf you select "Save single-line", enter the replacement sequence for line breaks in the "End-of-line replacement:" zone.
+By default, the replacement character is "¶" (ASCII code 182).
+)
+Help("Saving multi-line fields", strHelp)
 return
 
 
@@ -603,7 +762,17 @@ return
 ; --------------------- TAB 4 --------------------------
 
 ButtonHelpFileToExport:
-Help("Export data", "Enter the name of the destination file of the export (the current program's directory is used if an absolute path isn't specified) or hit ""Select"" to choose the destination file. When other options are OK, hit ""Export"" to export all or selected rows to the destination file.`n`nNote that all rows are saved by default. You can select one row (using Click), a series of adjacent rows (using Shift-Click) or non contiguous rows (using Ctrl-Click or Shift-Ctrl-Click).`n`nNote that fields are exported in the order they appear in the list and rows are saved according to the current sorting order (click on a column name to sort rows).")
+strHelp =
+(Join`s
+Enter the name of the destination file of the export (the current program's directory is used if an absolute path isn't specified) or hit "Select"
+to choose the destination file. When other options are OK, hit "Export" to export all or selected rows to the destination file.
+
+`n`nNote that all rows are saved by default. You can select one row (using Click), a series of adjacent rows (using Shift-Click) or non contiguous rows
+(using Ctrl-Click or Shift-Ctrl-Click).
+
+`n`nFields are exported in the order they appear in the list and rows are saved according to the current sorting order (click on a column name to sort rows).
+)
+Help("Export data", strHelp)
 return
 
 
@@ -638,6 +807,8 @@ return
 
 ClickRadFixed:
 Gui, 1:Submit, NoHide
+GuiControl, 1:Show, btnHelpExportMulti
+GuiControl, 1:, btnHelpExportMulti, Fixed-width Export Help
 GuiControl, 1:Show, lblMultiPurpose
 GuiControl, 1:, lblMultiPurpose, Fields width:
 GuiControl, 1:Show, strMultiPurpose
@@ -661,6 +832,8 @@ return
 
 ClickRadHTML:
 Gui, 1:Submit, NoHide
+GuiControl, 1:Show, btnHelpExportMulti
+GuiControl, 1:, btnHelpExportMulti, HTML Export Help
 GuiControl, 1:Show, lblMultiPurpose
 GuiControl, 1:, lblMultiPurpose, HTML template:
 GuiControl, 1:Show, strMultiPurpose
@@ -674,6 +847,8 @@ return
 
 ClickRadXML:
 Gui, 1:Submit, NoHide
+GuiControl, 1:Show, btnHelpExportMulti
+GuiControl, 1:, btnHelpExportMulti, XML Export Help
 GuiControl, 1:Hide, lblMultiPurpose
 GuiControl, 1:Hide, strMultiPurpose
 GuiControl, 1:, strMultiPurpose
@@ -685,6 +860,8 @@ return
 
 ClickRadExpress:
 Gui, 1:Submit, NoHide
+GuiControl, 1:Show, btnHelpExportMulti
+GuiControl, 1:, btnHelpExportMulti, Express Export Help
 GuiControl, 1:Show, lblMultiPurpose
 GuiControl, 1:, lblMultiPurpose, Express template:
 GuiControl, 1:Show, strMultiPurpose
@@ -707,6 +884,7 @@ return
 
 ButtonHelpExportFormat:
 /*
+####
 pour help, ré.écrire: Fixed width files are text files files where data is presented in lines and fields. The fields themselves are placed at fixed offsets.
 MS ACCESS Fixed-width files     In a fixed-width file, each record appears on a separate line, and the width of each field remains consistent across records. In other words, the length of the first field of every record might always be seven characters, the length of the second field of every record might always be 12 characters, and so on. If the actual values of a field vary from record to record, the values that fall short of the required width will be padded with trailing spaces.
 
@@ -721,6 +899,43 @@ Pour Express
 `t`r`n`f
 
 */
+strHelp =
+(Join`s
+)
+Help("Export Format", strHelp)
+return
+
+
+
+ButtonHelpExportMulti:
+if (radFixed)
+{
+	strHelp =
+	(Join`s
+	)
+	Help("Fixed-width Export", strHelp)
+}
+else if (radHTML)
+{
+	strHelp =
+	(Join`s
+	)
+	Help("HTML Export", strHelp)
+}
+else if (radXML)
+{
+	strHelp =
+	(Join`s
+	)
+	Help("XML Export", strHelp)
+}
+else if (radExpress)
+{
+	strHelp =
+	(Join`s
+	)
+	Help("Express Export", strHelp)
+}
 return
 
 
@@ -1305,7 +1520,6 @@ GUID()         ; 32 hex digits = 128-bit Globally Unique ID
    SetFormat Integer, %format%      ; restore original format
    Return h
 }
-
 
 
 
