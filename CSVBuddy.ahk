@@ -16,7 +16,7 @@ This script uses the library ObjCSV v0.2 (https://github.com/JnLlnd/ObjCSV)
 global strApplicationName := "CSV Buddy"
 global strApplicationVersion := "v0.2.1 ALPHA" ; (avec pull de v0.1.2 ALPHA)
 
-intDefaultWidth := 16 ; used when export to fixed width format
+intDefaultWidth := 16 ; used when export to fixed-width format
 strTemplateDelimiter := "¤" ; Chr(164)
 
 
@@ -82,8 +82,8 @@ Gui, 1:Add, Button,		yp		x+5		vbtnHelpFieldDelimiter3 gButtonHelpFieldDelimiter3
 Gui, 1:Add, Text,		y+10	x100	vlblFieldEncapsulator3, Field encaps&ulator:
 Gui, 1:Add, Edit,		yp		x200	vstrFieldEncapsulator3 gChangedFieldEncapsulator3 w20 limit1 center, `"
 Gui, 1:Add, Button,		yp		x+5		vbtnHelpEncapsulator3 gButtonHelpEncapsulator3, ?
-Gui, 1:Add, Radio,		y100	x300	vradSaveWithHeader checked, Save &with CSV header
-Gui, 1:Add, Radio,		y+10	x300	vradSaveNoHeader, Save without CSV header
+Gui, 1:Add, Radio,		y100	x300	vradSaveWithHeader checked, Save &with header
+Gui, 1:Add, Radio,		y+10	x300	vradSaveNoHeader, Save without header
 Gui, 1:Add, Button,		y100	x450	vbtnHelpSaveHeader gButtonHelpSaveHeader, ?
 Gui, 1:Add, Radio,		y100	x500	vradSaveMultiline gClickRadSaveMultiline checked, Save multi-line
 Gui, 1:Add, Radio,		y+10	x500	vradSaveSingleline gClickRadSaveSingleline, Save single-line
@@ -99,7 +99,7 @@ Gui, 1:Add, Edit,		yp		x100	vstrFileToExport gChangedFileToExport
 Gui, 1:Add, Button,		yp		x+5		vbtnHelpFileToExport gButtonHelpFileToExport, ?
 Gui, 1:Add, Button,		yp		x+5		vbtnSelectFileToExport gButtonSelectFileToExport default, &Select
 Gui, 1:Add, Text,		y+10	x10		vlblCSVExportFormat w85 right, Export format:
-Gui, 1:Add, Radio,		yp		x100	vradFixed gClickRadFixed, Fixed width
+Gui, 1:Add, Radio,		yp		x100	vradFixed gClickRadFixed, Fixed-width
 Gui, 1:Add, Radio,		yp		x+15	vradHTML gClickRadHTML, HTML
 Gui, 1:Add, Radio,		yp		x+15	vradXML gClickRadXML, XML
 Gui, 1:Add, Radio,		yp		x+15	vradExpress gClickRadExpress, Express
@@ -115,7 +115,7 @@ Gui, 1:Add, Button,		y137	x+5		vbtnCheckExportFile gButtonCheckExportFile hidden
 
 Gui, 1:Tab, 5
 Gui, 1:Add, Link,		y+10	x10		vlblAboutText,
-(
+(Join`s
 <a href="https://bitbucket.org/JnLlnd/csvbuddy">%strApplicationName% %strApplicationVersion%</a>
 `nby Jean Lalonde (<a href="http://www.autohotkey.com/board/user/4880-jnllnd/">JnLlnd</a> on AHK forum)
 `nAll rights reserved (c)2013 - DO NOT DISTRIBUTE WITHOUT AUTHOR AUTORIZATION
@@ -732,9 +732,9 @@ ButtonHelpSaveHeader:
 Gui, 1:Submit, NoHide
 strHelp =
 (Join`s
-To save the field names as the first line of the CSV file, select "Save with CSV header".
+To save the field names as the first line of the CSV file, select "Save with header".
 
-`n`nIf you select "Save without CSV header", the first line of the file will contain the data of the first row to save.
+`n`nIf you select "Save without header", the first line of the file will contain the data of the first row to save.
 )
 Help("Save CSV Header", strHelp)
 return
@@ -937,24 +937,24 @@ return
 
 
 ButtonHelpExportFormat:
-/*
-####
-pour help, ré.écrire: Fixed width files are text files files where data is presented in lines and fields. The fields themselves are placed at fixed offsets.
-MS ACCESS Fixed-width files     In a fixed-width file, each record appears on a separate line, and the width of each field remains consistent across records. In other words, the length of the first field of every record might always be seven characters, the length of the second field of every record might always be 12 characters, and so on. If the actual values of a field vary from record to record, the values that fall short of the required width will be padded with trailing spaces.
-
-Pour fix: header selon tab 3
-Pour tous (sauf HTML): eol remplacement du tab 3
-Pour quels? Delimiters?
-
-Pour HTML: délimiteur du template: ¤ (ASCII 164)
-
-
-Pour Express
-`t`r`n`f
-
-*/
 strHelp =
 (Join`s
+Choose one of these export formats:
+
+`n`n• Fixed-width: To export to a text file where each record appears on a separate line, and the width of each field remains consistent across records.
+Field names can be optionaly inserted on the first line. Field names and data fields shorter than their width are padded with trailing spaces. Field
+names and data fields longer than their width are truncated at their maximal width.
+
+`n`n• HTML: To build an HTML file based on a template file including header, row and footer templates, where variable names are replaced with the content
+in each record of the collection.
+
+`n`n• XML: To build an XML file from the content of the collection. You must ensure that field names and field data comply with the rules of XML syntax.
+
+`n`n• Express: To build a text file based on a row template where variable names are replaced with the content in each record of the collection.
+
+`n`nSelect the export format and click the "... Export Help" button for more instructions about the selected format.
+
+`n`nClick "Export" button to export data and the "Check" button to see the result in the destination file.
 )
 Help("Export Format", strHelp)
 return
@@ -966,6 +966,23 @@ if (radFixed)
 {
 	strHelp =
 	(Join`s
+	Transfer the selected fields from a collection of objects to a fixed-width file.
+	
+	`n`nIn the "Fields width:", enter each field name to include in the file, followed by the width of this field. Field names and width values are
+	separated by the "Field delimiter:" specified in the tab "3) Save CSV File". Initialy, the "Fields width:" zone includes all fields with
+	a default width. To change the default width, click the "Change default width" button.
+	
+	`n`nField names and data fields shorter than their width are padded with trailing spaces. Field names and data fields longer than their width
+	are truncated at their maximal width.
+
+	`n`nField names can be optionnaly included on the first line of the file according to the selected option "Save with header" or "Save without
+	header" on the tab "3) Save CSV File".
+
+	`n`nA fixed-width file should not include end-of-line within data. If it does and if a value is entered in the "End-of-line replacement:" on
+	the tab "3) Save CSV File" (click "Save single-line" to see this option), end-of-line in multi-line fields are replaced by a character or string
+	of your choice. This value is included in the fixed-width character count.
+
+	`n`nClick "Export" button to export data and the "Check" button to see the result in the destination file.
 	)
 	Help("Fixed-width Export", strHelp)
 }
@@ -973,6 +990,41 @@ else if (radHTML)
 {
 	strHelp =
 	(Join`s
+	Build an HTML file based on a template file including header, row and footer templates, where variable names are replaced with the content
+	in each record of the collection.
+
+	`n`nEnter the template file name in the "HTML template:" or click "Select HTML template" to choose it. The template is divided in three sections: the header template (from the start of the file to the start of the row template), the row template (delimited by the markups ¤ROWS¤ and ¤/ROWS¤) and the footer template (from the end of the row template to the end of the file).
+	
+	`n`nThe row template is repeated in the output file for each record in the collection. Field names encapsulated by the ¤ character (ASCII code 164) are replaced by the matching data in each record. Also, ¤ROWNUMBER¤ is replaced by the current row number.
+	
+	`n`nIn the header and footer, the following variables are replaced by parts of the destination file name:
+	`n¤FILENAME¤ file name without its path, but including its extension
+	`n¤DIR¤ drive letter or share name, if present, and directory of the file, final backslash excluded
+	`n¤EXTENSION¤ file's extension, dot excluded
+	`n¤NAMENOEXT¤ file name without its path, dot and extension
+	`n¤DRIVE¤ drive letter or server name, if present
+
+	`n`nThis simple example, where each record has two fields named "Field1" and "Field2", shows the use of the various markups and variables:
+
+	`n`n<HEAD>
+	`n<TITLE>¤NAMENOEXT¤</TITLE>
+	`n</HEAD>
+	`n<BODY>
+	`n<H1>¤FILENAME¤</H1>
+	`n<TABLE>
+	`n<TR>
+	`n<TH>Row #</TH><TH>Field One</TH><TH>Field Two</TH>
+	`n</TR>
+	`n¤ROWS¤
+	`n<TR>
+	`n<TD>¤ROWNUMBER¤</TD><TD>¤Field1¤</TD><TD>¤Field2¤</TD>
+	`n</TR>
+	`n¤/ROWS¤
+	`n</TABLE>
+	`nSource: ¤DIR¤\¤FILENAME¤
+	`n</BODY>
+
+	`n`nClick "Export" button to export data and the "Check" button to see the result in the destination file.
 	)
 	Help("HTML Export", strHelp)
 }
@@ -980,6 +1032,23 @@ else if (radXML)
 {
 	strHelp =
 	(Join`s
+	Build an XML file from the content of the collection. You must ensure that field names and field data comply with the rules of XML syntax.
+
+	`n`nThis simple example, where each record has two fields named "Field1" and "Field2", shows the XML output format:
+
+	`n`n<?xml version='1.0'?>
+	`n<XMLExport>
+	`n    <Record>
+	`n        <Field1>Value Row 1 Col 1</Field1>
+	`n        <Field2>Value Row 1 Col 2</Field1>
+	`n    </Record>
+	`n    <Record>
+	`n        <Field1>Value Row 2 Col 1</Field1>
+	`n        <Field2>Value Row 2 Col 2</Field1>
+	`n    </Record>
+	`n</XMLExport>
+
+	`n`nClick "Export" button to export data and the "Check" button to see the result in the destination file.
 	)
 	Help("XML Export", strHelp)
 }
@@ -987,6 +1056,21 @@ else if (radExpress)
 {
 	strHelp =
 	(Join`s
+	Build a text file based on a row template where variable names are replaced with the content in each record of the collection.
+	
+	`n`nIn the "Express template:" zone, enter the template for each row of data in the collection. In this template, field names
+	encapsulated by the character ¤ (ASCII code 164) are replaced by the matching data in each record. Also, ¤ROWNUMBER¤ is replaced
+	by the current row number.
+	
+	`n`nAdditionaly, these special characters can be inserted in the template:
+	`n`t``t`treplaced by Tab (HT)
+	`n`t``n`treplaced by Linefeed (LF)
+	`n`t``r`treplaced by Carriage return (CR)
+	`n`t``f`treplaced by Formfeed (FF)
+
+	`n`nThe "Express template:" zone is initialized with all fields encapsulated by two ¤ characters and delimited with spaces.
+
+	`n`nClick "Export" button to export data and the "Check" button to see the result in the destination file.
 	)
 	Help("Express Export", strHelp)
 }
@@ -1004,13 +1088,13 @@ Gui, 1:Submit, NoHide
 Gui, 1:+OwnDialogs 
 if (radFixed)
 {
-	InputBox, intNewDefaultWidth, %strApplicationName% (%strApplicationVersion%) - Default fixed width
+	InputBox, intNewDefaultWidth, %strApplicationName% (%strApplicationVersion%) - Default fixed-width
 		, Enter the new default width:, , , 120, , , , , %intDefaultWidth%
 	if !ErrorLevel
 		if (intNewDefaultWidth > 0)
 			intDefaultWidth := intNewDefaultWidth
 		else
-			MsgBox, 48, %strApplicationName%, Default fixed width must be greater than 0.
+			MsgBox, 48, %strApplicationName%, Default fixed-width must be greater than 0.
 	Gosub, ClickRadFixed
 }
 else if (radHTML)
