@@ -14,7 +14,7 @@ This script uses the library ObjCSV v0.2 (https://github.com/JnLlnd/ObjCSV)
 ; --------------------- GLOBAL AND DEFAULT VALUES --------------------------
 
 global strApplicationName := "CSV Buddy"
-global strApplicationVersion := "v0.2.1 ALPHA" ; (avec pull de v0.1.2 ALPHA)
+global strApplicationVersion := "v0.2.2 ALPHA"
 
 intDefaultWidth := 16 ; used when export to fixed-width format
 strTemplateDelimiter := "¤" ; Chr(164)
@@ -182,12 +182,39 @@ return
 ButtonHelpFileToLoad:
 strHelp =
 (Join`s
-Hit "Select" to choose the CSV file to load. When other options are OK, hit "Load"
-to import the file in the list below.
+Hit "Select" to choose the CSV file to load.
+
+`n`nClick on the various Help (?) buttons to learn about the options offered by
+%strApplicationName%. When setting are ready, hit "Load" to import the file.
 
 `n`nNote that a maximum of 200 fields can be loaded.
 )
 Help("CSV File To Load", strHelp)
+return
+
+
+
+DetectDelimiters:
+Gui, 1:Submit, NoHide
+strFileHeaderUnEscaped := StrUnEscape(strFileHeaderEscaped)
+strCandidates := ",`t;:|~" ; check comma, tab, semi-colon, colon, pipe and tilde
+strFieldDelimiterDetected := "," ; comma by default if no delimiter is detected
+loop, Parse, strCandidates
+	if InStr(strFileHeaderUnEscaped, A_LoopField)
+	{
+		strFieldDelimiterDetected := A_LoopField
+		break
+	}
+GuiControl, 1:, strFieldDelimiter1, % StrMakeEncodedFieldDelimiter(strFieldDelimiterDetected)
+strCandidates := """'~|" ; check double-quote, single-quote, tilde and pipe
+strFieldEncapsulatorDetected := """" ; double-quotes by default if no encapsulator is detected
+loop, Parse, strCandidates
+	if (strFieldDelimiterDetected <> A_LoopField) and (InStr(strFileHeaderUnEscaped, strFieldDelimiterDetected . A_LoopField) or InStr(strFileHeaderUnEscaped, A_LoopField . strFieldDelimiterDetected))
+	{
+		strFieldEncapsulatorDetected := A_LoopField
+		break
+	}
+GuiControl, 1:, strFieldEncapsulator1, %strFieldEncapsulatorDetected%
 return
 
 
@@ -206,8 +233,8 @@ if (radGetHeader) or !(StrLen(strFileHeaderEscaped))
 }
 GuiControl, 1:+Default, btnLoadFile
 GuiControl, 1:Focus, btnLoadFile
+gosub, DetectDelimiters
 return
-
 
 
 ChangedFileToLoad:
@@ -299,17 +326,21 @@ return
 ButtonHelpFieldDelimiter1:
 strHelp =
 (Join`s
-Each field in the CSV header or in data rows of the file must be separated by a field delimiter.
+Each field in the CSV header and in data rows of the file must be separated by a field delimiter.
 This is often comma ( , ), semicolon ( `; ) or Tab.
 
-`n`nEnter any single character such as comma, semicolon or one of these letters for special characters:
+`n`n%strApplicationName% will detect the delimiter if one of these characters is found in the first line
+of the file: comma, tab, semi-colon, colon, pipe or tilde. If this is not the correct delimiter, enter
+any single character or one of these letters for special invisible characters:
 
 `n`nt`tTab (HT)
 `nn`tLinefeed (LF)
 `nr`tCarriage return (CR)
-`nf`tFormfeed (FF)
+`nf`tForm feed (FF)
 
-`n`nUse the "Preview" button to find what is the field delimiter in this file.
+`n`nSpace can also be used as delimiter. Just enter a space in the text zone.
+
+`n`nYou can also use the "Preview" button to find what is the field delimiter in this file.
 )
 Help("Field Delimiter", strHelp)
 return
@@ -334,7 +365,10 @@ in a CSV file, the data field "Smith, John" must be encapsulated because it cont
 `n`nIf a field contains a character used as encapsulator, this character must be doubled. For example, the data "John "Junior" Smith"
 must be stated as "John ""Junior"" Smith").
 
-`n`nUse the "Preview" button to find what is the field encapsulator in this file.
+`n`n%strApplicationName% will detect the encapsulator if one of these characters is found in the first line of the file:
+double-quote, single-quote, tilde or pipe. If this is not the correct encapsulator, enter any single character.
+
+`n`nYou can also use the "Preview" button to find what is the field encapsulator in this file.
 )
 Help("Field Encapsulator", strHelp)
 return
@@ -680,7 +714,7 @@ return
 ButtonHelpFieldDelimiter3:
 strHelp =
 (Join`s
-Each field in the CSV header or in data rows of the file must be separated by a field delimiter. Enter the field delimiter
+Each field in the CSV header and in data rows of the file must be separated by a field delimiter. Enter the field delimiter
 character to use in the saved file.
 
 `n`nIt can be comma ( , ), semicolon ( `; ), Tab or any single character.
@@ -690,7 +724,7 @@ character to use in the saved file.
 `n`nt`tTab (HT)
 `nn`tLinefeed (LF)
 `nr`tCarriage return (CR)
-`nf`tFormfeed (FF)
+`nf`tForm feed (FF)
 )
 Help("Field Delimiter", strHelp)
 return
@@ -789,7 +823,7 @@ else
 	strEolReplacement := strEndoflineReplacement3
 ; ObjCSV_Collection2CSV(objCollection, strFilePath [, blnHeader = 0, strFieldOrder = "", blnProgress = 0, blnOverwrite = 0
 ;	, strFieldDelimiter = ",", strEncapsulator = """", strEndOfLine = "`n", strEolReplacement = ""])
-ObjCSV_Collection2CSV(obj, strFileToSave, radSaveWithHeader, GetHeader(strFieldDelimiter3, strFieldEncapsulator3), 1, blnOverwrite
+ObjCSV_Collection2CSV(obj, strFileToSave, radSaveWithHeader, GetListViewHeader(strFieldDelimiter3, strFieldEncapsulator3), 1, blnOverwrite
 	, StrMakeRealFieldDelimiter(strFieldDelimiter3), strFieldEncapsulator3, , strEolReplacement)
 if FileExist(strFileToSave)
 {
@@ -1066,7 +1100,7 @@ else if (radExpress)
 	`n`t``t`treplaced by Tab (HT)
 	`n`t``n`treplaced by Linefeed (LF)
 	`n`t``r`treplaced by Carriage return (CR)
-	`n`t``f`treplaced by Formfeed (FF)
+	`n`t``f`treplaced by Form feed (FF)
 
 	`n`nThe "Express template:" zone is initialized with all fields encapsulated by two ¤ characters and delimited with spaces.
 
@@ -1396,7 +1430,9 @@ return
 
 UpdateCurrentHeader:
 Gui, 1:Submit, NoHide
-strCurrentHeader := GetHeader(strFieldDelimiter1, strFieldEncapsulator1)
+If !LV_GetCount("") ; no data in ListView, do not update header (required when called by ChangedFieldDelimiter1 or ChangedFieldEncapsulator1)
+	return
+strCurrentHeader := GetListViewHeader(strFieldDelimiter1, strFieldEncapsulator1)
 strEscapedCurrentHeader := StrEscape(strCurrentHeader)
 GuiControl, 1:, strFileHeaderEscaped, %strEscapedCurrentHeader%
 GuiControl, 1:, strRenameEscaped, %strEscapedCurrentHeader%
@@ -1535,7 +1571,7 @@ ExitApp
 ; --------------------- FUNCTIONS --------------------------
 
 
-GetHeader(strFieldDelimiter, strFieldEncapsulator)
+GetListViewHeader(strFieldDelimiter, strFieldEncapsulator)
 {
 	strDelimiter := StrMakeRealFieldDelimiter(strFieldDelimiter)
 	strHeader := ""
@@ -1582,6 +1618,17 @@ StrMakeRealFieldDelimiter(strConverted)
 	StringReplace, strConverted, strConverted, n, `n, All ; Linefeed (LF)
 	StringReplace, strConverted, strConverted, r, `r, All ; Carriage return (CR)
 	StringReplace, strConverted, strConverted, f, `f, All ; Form feed (FF)
+	return strConverted
+}
+
+
+
+StrMakeEncodedFieldDelimiter(strConverted)
+{
+	StringReplace, strConverted, strConverted, `t, t, All ; Tab (HT)
+	StringReplace, strConverted, strConverted, `n, n, All ; Linefeed (LF)
+	StringReplace, strConverted, strConverted, `r, r, All ; Carriage return (CR)
+	StringReplace, strConverted, strConverted, `f, f, All ; Form feed (FF)
 	return strConverted
 }
 
