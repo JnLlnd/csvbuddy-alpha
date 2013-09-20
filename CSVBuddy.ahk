@@ -14,7 +14,7 @@ This script uses the library ObjCSV v0.2 (https://github.com/JnLlnd/ObjCSV)
 ; --------------------- GLOBAL AND DEFAULT VALUES --------------------------
 
 global strApplicationName := "CSV Buddy"
-global strApplicationVersion := "v0.2.2 ALPHA"
+global strApplicationVersion := "v0.2.2 ALPHA-debug"
 
 intDefaultWidth := 16 ; used when export to fixed-width format
 strTemplateDelimiter := "¤" ; Chr(164)
@@ -1170,13 +1170,21 @@ else if (radHTML)
 else if (radXML)
 	Gosub, ExportXML
 else if (radExpress)
+{
+	###_D("#1 Début du if radExpress")
 	if StrLen(strMultiPurpose)
+	{
+		###_D("#2 Avant ExportExpress")
 		Gosub, ExportExpress
+		###_D("#9 Après ExportExpress")
+		###_D("#10 Merci :-)")
+	}
 	else
 	{
 		MsgBox, 48, %strApplicationName%, First enter the row template in the "Express template:" zone.
 		return
 	}
+}
 else
 	MsgBox, 48, %strApplicationName%, Select the Export format.
 return
@@ -1541,23 +1549,39 @@ return
 
 
 ExportExpress:
+###_D("#3 Avant ObjCSV_ListView2Collection")
 obj := ObjCSV_ListView2Collection("1", "lvData", , , , 1)
+###_D("#4 Après ObjCSV_ListView2Collection")
 ; ObjCSV_Collection2HTML(objCollection, strFilePath, strTemplateFile [, strTemplateEncapsulator = ~
 ;	, blnProgress = 0, blnOverwrite = 0])
-strExpressTemplateTempFile := GUID() . ".TMP"
+SplitPath, strFileToExport, , strOutDir
+strExpressTemplateTempFile := strOutDir . "\" . GUID() . ".TMP"
 strExpressTemplate := strTemplateDelimiter . "ROWS" . strTemplateDelimiter
 strExpressTemplate := strExpressTemplate  . strMultiPurpose
 strExpressTemplate := strExpressTemplate  . strTemplateDelimiter . "/ROWS" . strTemplateDelimiter
 strExpressTemplate := StrUnEscape(strExpressTemplate)
 FileAppend, %strExpressTemplate%, %strExpressTemplateTempFile%
-ObjCSV_Collection2HTML(obj, strFileToExport, strExpressTemplateTempFile, strTemplateDelimiter, 0, 1)
-FileDelete, %strExpressTemplateTempFile%
-if FileExist(strFileToExport)
+###_D("#5 Avant l'affichage du fichier temporaire`nNom du fichier: " . strExpressTemplateTempFile
+	. "`nWorkingDir: " . A_WorkingDir
+	. "`nErrorLevel: " . ErrorLevel
+	. "`nLastError: " . A_LastError)
+if FileExist(strExpressTemplateTempFile)
 {
-	GuiControl, 1:Show, btnCheckExportFile
-	GuiControl, 1:+Default, btnCheckExportFile
-	GuiControl, 1:Focus, btnCheckExportFile
+	run, %strExpressTemplateTempFile%
+	###_D("#6 Après l'affichage du fichier temporaire " . strExpressTemplateTempFile)
+	###_D("#7 Avant ObjCSV_Collection2HTML")
+	ObjCSV_Collection2HTML(obj, strFileToExport, strExpressTemplateTempFile, strTemplateDelimiter, 0, 1)
+	###_D("#8 Après ObjCSV_Collection2HTML")
+	FileDelete, %strExpressTemplateTempFile%
+	if FileExist(strFileToExport)
+	{
+		GuiControl, 1:Show, btnCheckExportFile
+		GuiControl, 1:+Default, btnCheckExportFile
+		GuiControl, 1:Focus, btnCheckExportFile
+	}
 }
+else
+	MsgBox, 16, %strApplicationName%, An error occured while creating a temporary template file.
 obj := ; release object
 return
 
