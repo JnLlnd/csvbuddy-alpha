@@ -146,7 +146,7 @@ else if InStr(tabCSVBuddy, "Edit")
 		GuiControl, 1:+Default, btnReady
 	else
 	{
-		MsgBox, 48, %strApplicationName%, First load a CSV file in the first tab.
+		Oops("First load a CSV file in the first tab.")
 		GuiControl, 1:Choose, tabCSVBuddy, 1
 	}
 else if InStr(tabCSVBuddy, "Save")
@@ -154,7 +154,7 @@ else if InStr(tabCSVBuddy, "Save")
 		GuiControl, 1:+Default, btnSelectFileToSave
 	else
 	{
-		MsgBox, 48, %strApplicationName%, First load a CSV file in the first tab.
+		Oops("First load a CSV file in the first tab.")
 		GuiControl, 1:Choose, tabCSVBuddy, 1
 	}
 else if InStr(tabCSVBuddy, "Export")
@@ -162,7 +162,7 @@ else if InStr(tabCSVBuddy, "Export")
 		GuiControl, 1:+Default, btnSelectFileToExport
 	else
 	{
-		MsgBox, 48, %strApplicationName%, First load a CSV file in the first tab.
+		Oops("First load a CSV file in the first tab.")
 		GuiControl, 1:Choose, tabCSVBuddy, 1
 	}
 else if InStr(tabCSVBuddy, "About")
@@ -277,7 +277,7 @@ ButtonPreviewFile:
 Gui, 1:Submit, NoHide
 if !StrLen(strFileToLoad)
 {
-	MsgBox, 48, %strApplicationName%, First use the "Select" button to choose the CSV file you want to load.
+	Oops("First use the ""Select"" button to choose the CSV file you want to load.")
 	return
 }
 run, notepad.exe %strFileToLoad%
@@ -411,9 +411,11 @@ return
 ButtonLoadFile:
 Gui, 1:+OwnDialogs
 Gui, 1:Submit, NoHide
+if !DelimitersOK(1)
+	return
 if !StrLen(strFileToLoad)
 {
-	MsgBox, 48, %strApplicationName%, First use the "Select" button to choose the CSV file you want to load.
+	Oops("First use the ""Select"" button to choose the CSV file you want to load.")
 	return
 }
 if !StrLen(strFileHeaderEscaped) and (radSetHeader)
@@ -453,7 +455,7 @@ obj := ObjCSV_CSV2Collection(strFileToLoad, strCurrentHeader, radGetHeader, blnM
 ObjCSV_Collection2ListView(obj, "1", "lvData", strCurrentHeader, strRealFieldDelimiter1, strFieldEncapsulator1, , , 1)
 if !LV_GetCount()
 {
-	MsgBox, 16, %strApplicationName%, CSV file not loaded.`n`nNote that %strApplicationName% support files with a maximum of 200 fields.
+	Oops("CSV file not loaded.`n`nNote that " . strApplicationName . " support files with a maximum of 200 fields.")
 	return
 }
 else
@@ -486,9 +488,11 @@ return
 
 ButtonSetRename:
 Gui, 1:Submit, NoHide
+if !DelimitersOK(1)
+	return
 if !LV_GetCount()
 {
-	MsgBox, 48, %strApplicationName%, First load a CSV file in the first tab.
+	Oops("First load a CSV file in the first tab.")
 	return
 }
 if !StrLen(strRenameEscaped)
@@ -539,20 +543,22 @@ return
 
 ButtonSetSelect:
 Gui, 1:Submit, NoHide
+if !DelimitersOK(1)
+	return
 if !StrLen(strSelectEscaped)
 {
-	MsgBox, 48, %strApplicationName%, 
-	(
-	First enter the names of the fields you want to keep in the list, separated by the field delimiter ( %strFieldDelimiter1% ),
+	Oops(
+	(Join`s
+	"First enter the names of the fields you want to keep in the list, separated by the field delimiter ( " . strFieldDelimiter1 . " ),
 	keeping their current order.
 	
-	`n`nField names are automatically filled when you load a CSV file in the fisrt tab.
-	)
+	`n`nField names are automatically filled when you load a CSV file in the fisrt tab."
+	))
 	return
 }
 if !LV_GetCount()
 {
-	MsgBox, 48, %strApplicationName%, First load a CSV file in the fisrt tab.
+	Oops("First load a CSV file in the fisrt tab.")
 	return
 }
 strRealFieldDelimiter1 := StrMakeRealFieldDelimiter(strFieldDelimiter1)
@@ -604,27 +610,23 @@ return
 
 
 ButtonSetOrder:
-/*
-ObjCSV_Collection2ListView(objCollection, strGuiID := "", strListViewID := "", strFieldOrder := "", strFieldDelimiter := ","
-	, strEncapsulator := """", strSortFields := "", strSortOptions := "", blnProgress := 0)
-ObjCSV_ListView2Collection(strGuiID := "", strListViewID := "", strFieldOrder := "", strFieldDelimiter := ","
-	, strFieldEncapsulator := """", blnProgress := 0)
-*/
 Gui, 1:Submit, NoHide
+if !DelimitersOK(1)
+	return
 if !StrLen(strSelectEscaped)
 {
-	MsgBox, 48, %strApplicationName%,
-	(
-	First enter the names of the fields you want to keep in the list, in the desired order,
-	separated by the field delimiter ( %strFieldDelimiter1% ).
+	Oops(
+	(Join`s
+	"First enter the names of the fields you want to keep in the list, in the desired order,
+	separated by the field delimiter ( " . strFieldDelimiter1 . " ).
 	
-	`n`nField names are automatically filled when you load a CSV file in the fisrt tab.
-	)
+	`n`nField names are automatically filled when you load a CSV file in the fisrt tab."
+	))
 	return
 }
 if !LV_GetCount()
 {
-	MsgBox, 48, %strApplicationName%, First load a CSV file in the fisrt tab.
+	Oops("First load a CSV file in the fisrt tab.")
 	return
 }
 strRealFieldDelimiter1 := StrMakeRealFieldDelimiter(strFieldDelimiter1)
@@ -810,6 +812,8 @@ return
 
 ButtonSaveFile:
 Gui, 1:Submit, NoHide
+if !DelimitersOK(3)
+	return
 blnOverwrite := CheckIfFileExistOverwrite(strFileToSave)
 if (blnOverwrite < 0)
 	return
@@ -893,6 +897,11 @@ return
 
 ClickRadFixed:
 Gui, 1:Submit, NoHide
+if !DelimitersOK(1) or !DelimitersOK(3)
+{
+	GuiControl, , radFixed, 0
+	return
+}
 GuiControl, 1:Show, btnHelpExportMulti
 GuiControl, 1:, btnHelpExportMulti, Fixed-width Export Help
 GuiControl, 1:Show, lblMultiPurpose
@@ -947,6 +956,11 @@ return
 
 ClickRadExpress:
 Gui, 1:Submit, NoHide
+if !DelimitersOK(1) or !DelimitersOK(3)
+{
+	GuiControl, , radExpress, 0
+	return
+}
 GuiControl, 1:Show, btnHelpExportMulti
 GuiControl, 1:, btnHelpExportMulti, Express Export Help
 GuiControl, 1:Show, lblMultiPurpose
@@ -1128,7 +1142,7 @@ if (radFixed)
 		if (intNewDefaultWidth > 0)
 			intDefaultWidth := intNewDefaultWidth
 		else
-			MsgBox, 48, %strApplicationName%, Default fixed-width must be greater than 0.
+			Oops("Default fixed-width must be greater than 0.")
 	Gosub, ClickRadFixed
 }
 else if (radHTML)
@@ -1155,8 +1169,11 @@ if (radFixed)
 		Gosub, ExportFixed
 	else
 	{
-		MsgBox, 48, %strApplicationName%
-			, Fill the "Fields width" zone with fields names and width separated by the field delimiter ( %strFieldDelimiter3% ).
+		Oops(
+		(Join`s
+		"Fill the ""Fields width"" zone with fields names and width separated by the field delimiter ( "
+		. strFieldDelimiter3 . ")."
+		))
 		return
 	}
 else if (radHTML)
@@ -1164,7 +1181,7 @@ else if (radHTML)
 		Gosub, ExportHTML
 	else
 	{
-		MsgBox, 48, %strApplicationName%, First use the "Select HTML template" button to choose the HTML template file.
+		Oops("First use the ""Select HTML template"" button to choose the HTML template file.")
 		return
 	}
 else if (radXML)
@@ -1174,11 +1191,11 @@ else if (radExpress)
 		Gosub, ExportExpress
 	else
 	{
-		MsgBox, 48, %strApplicationName%, First enter the row template in the "Express template:" zone.
+		Oops("First enter the row template in the ""Express template:"" zone.")
 		return
 	}
 else
-	MsgBox, 48, %strApplicationName%, Select the Export format.
+	Oops("First, select the Export format.")
 return
 
 
@@ -1467,6 +1484,8 @@ return
 
 
 ExportFixed:
+if !DelimitersOK(3)
+	return
 ; ObjCSV_ListView2Collection([strGuiID = "", strListViewID = "", strFieldOrder = "", strFieldDelimiter = ","
 ;	, strEncapsulator = """", blnProgress = 0])
 obj := ObjCSV_ListView2Collection("1", "lvData", , , , 1)
@@ -1484,7 +1503,7 @@ loop, % objFieldsArray.MaxIndex() / 2
 		strFieldsWidth := strFieldsWidth . intThisWidth . strRealFieldDelimiter3
 	else
 	{
-		MsgBox, 48, %strApplicationName%, "%intThisWidth%" in field # %A_Index% "%strThisName%" must be an integer number.
+		Oops("""" . intThisWidth . """ in field #" . A_Index . " """ . strThisName . """ must be an integer number.")
 		return
 	}
 }
@@ -1542,8 +1561,6 @@ return
 
 ExportExpress:
 obj := ObjCSV_ListView2Collection("1", "lvData", , , , 1)
-; ObjCSV_Collection2HTML(objCollection, strFilePath, strTemplateFile [, strTemplateEncapsulator = ~
-;	, blnProgress = 0, blnOverwrite = 0])
 SplitPath, strFileToExport, , strOutDir
 strExpressTemplateTempFile := strOutDir . "\" . GUID() . ".TMP"
 strExpressTemplate := strTemplateDelimiter . "ROWS" . strTemplateDelimiter
@@ -1554,6 +1571,8 @@ FileAppend, %strExpressTemplate%, %strExpressTemplateTempFile%
 if FileExist(strExpressTemplateTempFile)
 {
 	run, notepad.exe %strExpressTemplateTempFile%
+	; ObjCSV_Collection2HTML(objCollection, strFilePath, strTemplateFile [, strTemplateEncapsulator = ~
+	;	, blnProgress = 0, blnOverwrite = 0])
 	ObjCSV_Collection2HTML(obj, strFileToExport, strExpressTemplateTempFile, strTemplateDelimiter, 0, 1)
 	FileDelete, %strExpressTemplateTempFile%
 	if FileExist(strFileToExport)
@@ -1564,7 +1583,7 @@ if FileExist(strExpressTemplateTempFile)
 	}
 }
 else
-	MsgBox, 16, %strApplicationName%, An error occured while creating a temporary template file.
+	Oops("An error occured while creating a temporary template file.")
 obj := ; release object
 return
 
@@ -1649,6 +1668,14 @@ Help(strTitle, strMessage)
 
 
 
+Oops(strMessage)
+{
+	Gui, 1:+OwnDialogs 
+	MsgBox, 48, %strApplicationName% (%strApplicationVersion%),%strMessage%
+}
+
+
+
 ShrinkEditControl(strEditHandle, intMaxRows, strGuiName)
 {
 	EM_GETLINECOUNT = 0xBA
@@ -1727,6 +1754,24 @@ GUID()         ; 32 hex digits = 128-bit Globally Unique ID
    }
    SetFormat Integer, %format%      ; restore original format
    Return h
+}
+
+
+
+DelimitersOK(intTab)
+{
+	if (strFieldDelimiter%intTab% = strFieldEncapsulator%intTab%) or (strFieldDelimiter%intTab% = "") or (strFieldEncapsulator%intTab% = "")
+	{
+		Oops("Field delimiter and field encapsulator in tab " . intTab . " cannot be the same character and cannot be empty.")
+		GuiControl, 1:Choose, tabCSVBuddy, %intTab%
+		if (strFieldDelimiter%intTab% = strFieldEncapsulator%intTab%) or (strFieldDelimiter%intTab% = "")
+			GuiControl, Focus, strFieldDelimiter%intTab%
+		else
+			GuiControl, Focus, strFieldEncapsulator%intTab%
+		return false
+	}
+	else
+		return true
 }
 
 
