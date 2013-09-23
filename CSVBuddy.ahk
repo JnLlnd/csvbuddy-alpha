@@ -14,7 +14,7 @@ This script uses the library ObjCSV v0.2 (https://github.com/JnLlnd/ObjCSV)
 ; --------------------- GLOBAL AND DEFAULT VALUES --------------------------
 
 global strApplicationName := "CSV Buddy"
-global strApplicationVersion := "v0.2.2 ALPHA"
+global strApplicationVersion := "v0.2.3 ALPHA"
 
 intDefaultWidth := 16 ; used when export to fixed-width format
 strTemplateDelimiter := "¤" ; Chr(164)
@@ -316,9 +316,17 @@ return
 
 
 ChangedFieldDelimiter1:
+/*
+strPreviousFieldDelimiter := strFieldDelimiter1
 Gui, 1:Submit, NoHide
-GuiControl, 1:, strFieldDelimiter3, %strFieldDelimiter1%
-Gosub, UpdateCurrentHeader
+if NewDelimiterOrEncapsulatorOK(strFieldDelimiter1, strPreviousFieldDelimiter, strFieldEncaplsulator1)
+	GuiControl, 1:, strFieldDelimiter3, %strFieldDelimiter1%
+else
+{
+	GuiControl, 1:, strFieldDelimiter1, %strPreviousFieldDelimiter%
+}
+; ### OUT? Gosub, UpdateCurrentHeader
+*/
 return
 
 
@@ -340,7 +348,7 @@ any single character or one of these letters for special invisible characters:
 
 `n`nSpace can also be used as delimiter. Just enter a space in the text zone.
 
-`n`nYou can also use the "Preview" button to find what is the field delimiter in this file.
+`n`nTip: Use the "Preview" button to find what is the field delimiter in this file.
 )
 Help("Field Delimiter", strHelp)
 return
@@ -348,9 +356,17 @@ return
 
 
 ChangedFieldEncapsulator1:
+/*
+strPreviousFieldEncapsulator := strFieldEncapsulator1
 Gui, 1:Submit, NoHide
-GuiControl, 1:, strFieldEncapsulator3, %strFieldEncapsulator1%
-Gosub, UpdateCurrentHeader
+if NewDelimiterOrEncapsulatorOK(strFieldEncapsulator1, strFieldDelimiter1, strPreviousFieldEncapsulator)
+	GuiControl, 1:, strFieldEncapsulator3, %strFieldEncapsulator1%
+else
+{
+	GuiControl, 1:, strFieldEncapsulator1, %strPreviousFieldEncapsulator%
+}
+; ### OUT ? Gosub, UpdateCurrentHeader
+*/
 return
 
 
@@ -368,7 +384,7 @@ must be stated as "John ""Junior"" Smith").
 `n`n%strApplicationName% will detect the encapsulator if one of these characters is found in the first line of the file:
 double-quote, single-quote, tilde or pipe. If this is not the correct encapsulator, enter any single character.
 
-`n`nYou can also use the "Preview" button to find what is the field encapsulator in this file.
+`n`nTip: Use the "Preview" button to find what is the field encapsulator in this file.
 )
 Help("Field Encapsulator", strHelp)
 return
@@ -409,6 +425,12 @@ return
 
 
 ButtonLoadFile:
+/*
+utiliser les délimiteurs dans tab 1
+màj les current
+màj les délim du tab 3 avec ceux du tab 1
+	GuiControl, 1:, strFieldDelimiter3, %strFieldDelimiter1%
+*/
 Gui, 1:+OwnDialogs
 Gui, 1:Submit, NoHide
 if !DelimitersOK(1)
@@ -445,14 +467,17 @@ if LV_GetCount("Column")
 	}
 }
 strCurrentHeader := StrUnEscape(strFileHeaderEscaped)
-strRealFieldDelimiter1 := StrMakeRealFieldDelimiter(strFieldDelimiter1)
+strCurrentFieldDelimiter := StrMakeRealFieldDelimiter(strFieldDelimiter1)
+strCurrentVisibleFieldDelimiter := strFieldDelimiter1
+strCurrentFieldEncapsulator := strFieldEncapsulator1
 ; ObjCSV_CSV2Collection(strFilePath, ByRef strFieldNames [, blnHeader = 1, blnMultiline = 1, blnProgress = 0, strFieldDelimiter = ","
 ; 	, strEncapsulator = """", strRecordDelimiter = "`n", strOmitChars = "`r", strEolReplacement = ""])
-obj := ObjCSV_CSV2Collection(strFileToLoad, strCurrentHeader, radGetHeader, blnMultiline1, 1, strRealFieldDelimiter1, strFieldEncapsulator1
-	, , , strEndoflineReplacement1)
+obj := ObjCSV_CSV2Collection(strFileToLoad, strCurrentHeader, radGetHeader, blnMultiline1, 1, strCurrentFieldDelimiter
+	, strCurrentFieldEncapsulator, , , strEndoflineReplacement1)
 ; ObjCSV_Collection2ListView(objCollection [, strGuiID = "", strListViewID = "", strFieldOrder = "", strFieldDelimiter = ","
 ;	, strEncapsulator = """", strSortFields = "", strSortOptions = "", blnProgress = 0])
-ObjCSV_Collection2ListView(obj, "1", "lvData", strCurrentHeader, strRealFieldDelimiter1, strFieldEncapsulator1, , , 1)
+ObjCSV_Collection2ListView(obj, "1", "lvData", strCurrentHeader, strCurrentFieldDelimiter
+	, strCurrentFieldEncapsulator, , , 1)
 if !LV_GetCount()
 {
 	Oops("CSV file not loaded.`n`nNote that " . strApplicationName . " support files with a maximum of 200 fields.")
@@ -460,7 +485,7 @@ if !LV_GetCount()
 }
 else
 {
-	gosub UpdateCurrentHeader
+	Gosub, UpdateCurrentHeader
 	strHelp =
 	(Join`s
 	Your CSV file is loaded.
@@ -485,11 +510,8 @@ return
 
 ; --------------------- TAB 2 --------------------------
 
-
 ButtonSetRename:
 Gui, 1:Submit, NoHide
-if !DelimitersOK(1)
-	return
 if !LV_GetCount()
 {
 	Oops("First load a CSV file in the first tab.")
@@ -499,7 +521,7 @@ if !StrLen(strRenameEscaped)
 {
 	MsgBox, 52, %strApplicationName%,
 	(
-	In "Rename fields:", enter the list of field names separated by the field delimiter ( %strFieldDelimiter1% ).
+	In "Rename fields:", enter the list of field names separated by the field delimiter ( %strCurrentVisibleFieldDelimiter% ).
 	Field names are automatically filled when you load a CSV file in the first tab.
 	
 	`n`nIf no field names are provided, numbers are used as field names. Do you want to use numbers as field names? 
@@ -507,7 +529,7 @@ if !StrLen(strRenameEscaped)
 	IfMsgBox, No
 		return
 }
-objNewHeader := ReturnDSVObjectArray(StrUnEscape(strRenameEscaped), StrMakeRealFieldDelimiter(strFieldDelimiter1), strFieldEncapsulator1)
+objNewHeader := ReturnDSVObjectArray(StrUnEscape(strRenameEscaped), strCurrentFieldDelimiter, strCurrentFieldEncapsulator)
 Loop, % LV_GetCount("Column")
 {
 	if StrLen(objNewHeader[A_Index])
@@ -516,7 +538,7 @@ Loop, % LV_GetCount("Column")
 		LV_ModifyCol(A_Index, "", A_Index)
 	LV_ModifyCol(A_Index, "AutoHdr")
 }
-gosub UpdateCurrentHeader
+Gosub, UpdateCurrentHeader
 objNewHeader := ; release object
 return
 
@@ -527,12 +549,12 @@ Gui, 1:Submit, NoHide
 strHelp =
 (Join`s
 To change field names (column headers), enter a new name for each fields, in the order they actually appear in the list,
-separated by the field delimiter ( %strFieldDelimiter1% ) and click "Rename".
+separated by the field delimiter ( %strCurrentVisibleFieldDelimiter% ) and click "Rename".
 
 `n`nIf you enter less names than the number of fields (or no field name at all), numbers are used as field names for remaining columns.
 
-`n`nField names including the separator character ( %strFieldDelimiter1% ) must be enclosed by the encapsulator character
-( %strFieldEncapsulator1% ).
+`n`nField names including the separator character ( %strCurrentVisibleFieldDelimiter% ) must be enclosed by the encapsulator character
+( %strCurrentFieldEncapsulator% ).
 
 `n`nTo save the file, click on the tab "3) Save CSV File".
 )
@@ -543,27 +565,24 @@ return
 
 ButtonSetSelect:
 Gui, 1:Submit, NoHide
-if !DelimitersOK(1)
-	return
 if !StrLen(strSelectEscaped)
 {
 	Oops(
 	(Join`s
-	"First enter the names of the fields you want to keep in the list, separated by the field delimiter ( " . strFieldDelimiter1 . " ),
+	"First enter the names of the fields you want to keep in the list, separated by the field delimiter ( " . strCurrentVisibleFieldDelimiter . " ),
 	keeping their current order.
 	
-	`n`nField names are automatically filled when you load a CSV file in the fisrt tab."
+	`n`nField names are automatically filled when you load a CSV file in the first tab."
 	))
 	return
 }
 if !LV_GetCount()
 {
-	Oops("First load a CSV file in the fisrt tab.")
+	Oops("First load a CSV file in the first tab.")
 	return
 }
-strRealFieldDelimiter1 := StrMakeRealFieldDelimiter(strFieldDelimiter1)
-objCurrentHeader := ReturnDSVObjectArray(strCurrentHeader, strRealFieldDelimiter1, strFieldEncapsulator1)
-objNewHeader := ReturnDSVObjectArray(StrUnEscape(strSelectEscaped), strRealFieldDelimiter1, strFieldEncapsulator1)
+objCurrentHeader := ReturnDSVObjectArray(strCurrentHeader, strCurrentFieldDelimiter, strCurrentFieldEncapsulator)
+objNewHeader := ReturnDSVObjectArray(StrUnEscape(strSelectEscaped), strCurrentFieldDelimiter, strCurrentFieldEncapsulator)
 intMaxCurrent := objCurrentHeader.MaxIndex()
 intMaxNew := objNewHeader.MaxIndex()
 intIndexCurrent := 1
@@ -585,7 +604,7 @@ Loop
 	if (intIndexCurrent > intMaxCurrent)
 		break
 }
-gosub UpdateCurrentHeader
+Gosub, UpdateCurrentHeader
 objCurrentHeader := ; release object
 objNewHeader := ; release object
 return
@@ -597,10 +616,10 @@ Gui, 1:Submit, NoHide
 strHelp =
 (Join`s
 To remove fields (columns) from the list, enter the name of fields you want to keep, in the order they actually appear in the list,
-separated by the field delimiter ( %strFieldDelimiter1% ) and click "Select".
+separated by the field delimiter ( %strCurrentVisibleFieldDelimiter% ) and click "Select".
 
-`n`nField names including the separator character ( %strFieldDelimiter1% ) must be enclosed by the encapsulator character
-( %strFieldEncapsulator1% ).
+`n`nField names including the separator character ( %strCurrentVisibleFieldDelimiter% ) must be enclosed by the encapsulator character
+( %strCurrentFieldEncapsulator% ).
 
 `n`nTo save the file, click on the last tab "3) Save CSV File".
 )
@@ -611,33 +630,30 @@ return
 
 ButtonSetOrder:
 Gui, 1:Submit, NoHide
-if !DelimitersOK(1)
-	return
 if !StrLen(strSelectEscaped)
 {
 	Oops(
 	(Join`s
 	"First enter the names of the fields you want to keep in the list, in the desired order,
-	separated by the field delimiter ( " . strFieldDelimiter1 . " ).
+	separated by the field delimiter ( " . strCurrentVisibleFieldDelimiter . " ).
 	
-	`n`nField names are automatically filled when you load a CSV file in the fisrt tab."
+	`n`nField names are automatically filled when you load a CSV file in the first tab."
 	))
 	return
 }
 if !LV_GetCount()
 {
-	Oops("First load a CSV file in the fisrt tab.")
+	Oops("First load a CSV file in the first tab.")
 	return
 }
-strRealFieldDelimiter1 := StrMakeRealFieldDelimiter(strFieldDelimiter1)
-objNewCollection := ObjCSV_ListView2Collection("1", "lvData", StrUnEscape(strOrderEscaped), strRealFieldDelimiter1
-	, strFieldEncapsulator1, 1)
+objNewCollection := ObjCSV_ListView2Collection("1", "lvData", StrUnEscape(strOrderEscaped), strCurrentFieldDelimiter
+	, strCurrentFieldEncapsulator, 1)
 LV_Delete() ;  better performance on large files when we delete rows before columns
 loop, % LV_GetCount("Column")
 	LV_DeleteCol(1) ; delete all rows
-ObjCSV_Collection2ListView(objNewCollection, "1", "lvData", StrUnEscape(strOrderEscaped), strRealFieldDelimiter1
-	, strFieldEncapsulator1, , , 1)
-gosub UpdateCurrentHeader
+ObjCSV_Collection2ListView(objNewCollection, "1", "lvData", StrUnEscape(strOrderEscaped), strCurrentFieldDelimiter
+	, strCurrentFieldEncapsulator, , , 1)
+Gosub, UpdateCurrentHeader
 objNewCollection := ; release object
 return
 
@@ -648,12 +664,12 @@ Gui, 1:Submit, NoHide
 strHelp =
 (Join`s
 To change the order of fields (columns) in the list, enter the name of fields in the new order you want to apply,
-separated by the field delimiter ( %strFieldDelimiter1% ) and click "Order".
+separated by the field delimiter ( %strCurrentVisibleFieldDelimiter% ) and click "Order".
 
-`n`nField names including the separator character ( %strFieldDelimiter1% ) must be enclosed by the encapsulator character
-( %strFieldEncapsulator1% ).
+`n`nField names including the separator character ( %strCurrentVisibleFieldDelimiter% ) must be enclosed by the encapsulator character
+( %strCurrentFieldEncapsulator% ).
 
-`n`nIf you enter less fields than in the original header, fields not included in the new order are removed from the list.
+`n`nIf you enter less field names than in the original header, fields not included in the new order are removed from the list.
 However, if you only want to remove fields from the list (without changing the order), the "Select" button gives better
 performance on large files.
 
@@ -716,8 +732,8 @@ return
 ButtonHelpFieldDelimiter3:
 strHelp =
 (Join`s
-Each field in the CSV header and in data rows of the file must be separated by a field delimiter. Enter the field delimiter
-character to use in the saved file.
+Each field in the CSV header and in data rows of the file must be separated by a field delimiter.
+Enter the field delimiter character to use in the saved file.
 
 `n`nIt can be comma ( , ), semicolon ( `; ), Tab or any single character.
 
@@ -734,15 +750,37 @@ return
 
 
 ChangedFieldDelimiter3:
+strPrevious := strFieldDelimiter3
 Gui, 1:Submit, NoHide
-Gosub, UpdateCurrentHeader
+if StrLen(strFieldDelimiter3)
+{
+	if !NewDelimiterOrEncapsulatorOK(strFieldDelimiter3)
+	{
+		Oops("The new field delimiter ( " . strFieldDelimiter3 
+			. " ) cannot be choosen because it is currently in use in the field names.")
+		GuiControl, 1:, strFieldDelimiter3, %strPrevious%
+		return
+	}
+	Gosub, UpdateCurrentHeader
+}
 return
 
 
 
 ChangedFieldEncapsulator3:
+strPrevious := strFieldEncapsulator3
 Gui, 1:Submit, NoHide
-Gosub, UpdateCurrentHeader
+if StrLen(strFieldEncapsulator3)
+{
+	if !NewDelimiterOrEncapsulatorOK(strFieldEncapsulator3)
+	{
+		Oops("The new field encapsulator ( " . strFieldEncapsulator3 
+			. " ) cannot be choosen because it is currently in use in the field names.")
+		GuiControl, 1:, strFieldEncapsulator3, %strPrevious%
+		return
+	}
+	Gosub, UpdateCurrentHeader
+}
 return
 
 
@@ -827,8 +865,10 @@ else
 	strEolReplacement := strEndoflineReplacement3
 ; ObjCSV_Collection2CSV(objCollection, strFilePath [, blnHeader = 0, strFieldOrder = "", blnProgress = 0, blnOverwrite = 0
 ;	, strFieldDelimiter = ",", strEncapsulator = """", strEndOfLine = "`n", strEolReplacement = ""])
-ObjCSV_Collection2CSV(obj, strFileToSave, radSaveWithHeader, GetListViewHeader(strFieldDelimiter3, strFieldEncapsulator3), 1, blnOverwrite
-	, StrMakeRealFieldDelimiter(strFieldDelimiter3), strFieldEncapsulator3, , strEolReplacement)
+strRealFieldDelimiter3 := StrMakeRealFieldDelimiter(strFieldDelimiter3)
+ObjCSV_Collection2CSV(obj, strFileToSave, radSaveWithHeader
+	, GetListViewHeader(strRealFieldDelimiter3, strFieldEncapsulator3), 1, blnOverwrite
+	, strRealFieldDelimiter3, strFieldEncapsulator3, , strEolReplacement)
 if FileExist(strFileToSave)
 {
 	GuiControl, 1:Show, btnCheckFile
@@ -897,7 +937,7 @@ return
 
 ClickRadFixed:
 Gui, 1:Submit, NoHide
-if !DelimitersOK(1) or !DelimitersOK(3)
+if !DelimitersOK(3)
 {
 	GuiControl, , radFixed, 0
 	return
@@ -911,9 +951,8 @@ GuiControl, 1:, strMultiPurpose
 GuiControl, 1:Show, btnMultiPurpose
 GuiControl, 1:, btnMultiPurpose, Change default width
 GuiControl, 1:, strFileToExport, % NewFileName(strFileToLoad, "-EXPORT", "txt")
-strRealFieldDelimiter1 := StrMakeRealFieldDelimiter(strFieldDelimiter1)
-objCurrentHeader := ReturnDSVObjectArray(strCurrentHeader, strRealFieldDelimiter1, strFieldEncapsulator1)
-; strFieldDelimiter1 et strFieldEncapsulator1 pour la lecture de strCurrentHeader
+objCurrentHeader := ReturnDSVObjectArray(strCurrentHeader, strCurrentFieldDelimiter, strCurrentFieldEncapsulator)
+; strCurrentFieldDelimiter (strFieldDelimiter1) et strCurrentFieldEncapsulator (strFieldEncapsulator1) pour la lecture de strCurrentHeader
 strRealFieldDelimiter3 := StrMakeRealFieldDelimiter(strFieldDelimiter3)
 strMultiPurpose := ""
 Loop, % objCurrentHeader.MaxIndex()
@@ -956,7 +995,7 @@ return
 
 ClickRadExpress:
 Gui, 1:Submit, NoHide
-if !DelimitersOK(1) or !DelimitersOK(3)
+if !DelimitersOK(3)
 {
 	GuiControl, , radExpress, 0
 	return
@@ -969,9 +1008,8 @@ GuiControl, 1:Show, strMultiPurpose
 GuiControl, 1:, strMultiPurpose
 GuiControl, 1:Hide, btnMultiPurpose
 GuiControl, 1:, strFileToExport, % NewFileName(strFileToLoad, "-EXPORT", "txt")
-strRealFieldDelimiter1 := StrMakeRealFieldDelimiter(strFieldDelimiter1)
-objCurrentHeader := ReturnDSVObjectArray(strCurrentHeader, strRealFieldDelimiter1, strFieldEncapsulator1)
-; strFieldDelimiter1 et strFieldEncapsulator1 pour la lecture de strCurrentHeader
+objCurrentHeader := ReturnDSVObjectArray(strCurrentHeader, strCurrentFieldDelimiter, strCurrentFieldEncapsulator)
+; strCurrentFieldDelimiter et strCurrentFieldEncapsulator pour la lecture de strCurrentHeader
 strRealFieldDelimiter3 := StrMakeRealFieldDelimiter(strFieldDelimiter3)
 strMultiPurpose := ""
 Loop, % objCurrentHeader.MaxIndex()
@@ -1350,6 +1388,58 @@ IsRowSelected(intRow)
 
 
 
+; --------------------- GUI1  --------------------------
+
+
+GuiSize: ; Expand or shrink the ListView in response to the user's resizing of the window.
+if A_EventInfo = 1  ; The window has been minimized.  No action needed.
+    return
+; Otherwise, the window has been resized or maximized. Resize the controls to match.
+GuiControl, 1:Move, tabCSVBuddy, % "W" . (A_GuiWidth - 20)
+
+GuiControl, 1:Move, strFileToLoad, % "W" . (A_GuiWidth - 200)
+GuiControl, 1:Move, btnHelpFileToLoad, % "X" . (A_GuiWidth - 90)
+GuiControl, 1:Move, btnSelectFileToLoad, % "X" . (A_GuiWidth - 65)
+GuiControl, 1:Move, strFileHeaderEscaped, % "W" . (A_GuiWidth - 200)
+GuiControl, 1:Move, btnHelpHeader, % "X" . (A_GuiWidth - 90)
+GuiControl, 1:Move, btnPreviewFile, % "X" . (A_GuiWidth - 65)
+GuiControl, 1:Move, btnLoadFile, % "X" . (A_GuiWidth - 65)
+
+GuiControl, 1:Move, strRenameEscaped, % "W" . (A_GuiWidth - 205)
+GuiControl, 1:Move, btnSetRename, % "X" . (A_GuiWidth - 95)
+GuiControl, 1:Move, btnHelpRename, % "X" . (A_GuiWidth - 40)
+GuiControl, 1:Move, strSelectEscaped, % "W" . (A_GuiWidth - 205)
+GuiControl, 1:Move, btnSetSelect, % "X" . (A_GuiWidth - 95)
+GuiControl, 1:Move, btnHelpSelect, % "X" . (A_GuiWidth - 40)
+GuiControl, 1:Move, strOrderEscaped, % "W" . (A_GuiWidth - 205)
+GuiControl, 1:Move, btnSetOrder, % "X" . (A_GuiWidth - 95)
+GuiControl, 1:Move, btnHelpOrder, % "X" . (A_GuiWidth - 40)
+
+GuiControl, 1:Move, strFileToSave, % "W" . (A_GuiWidth - 200)
+GuiControl, 1:Move, btnHelpFileToSave, % "X" . (A_GuiWidth - 90)
+GuiControl, 1:Move, btnSelectFileToSave, % "X" . (A_GuiWidth - 65)
+GuiControl, 1:Move, btnSaveFile, % "X" . (A_GuiWidth - 65)
+GuiControl, 1:Move, btnCheckFile, % "X" . (A_GuiWidth - 65)
+
+GuiControl, 1:Move, strFileToExport, % "W" . (A_GuiWidth - 200)
+GuiControl, 1:Move, btnHelpFileToExport, % "X" . (A_GuiWidth - 90)
+GuiControl, 1:Move, btnSelectFileToExport, % "X" . (A_GuiWidth - 65)
+GuiControl, 1:Move, btnExportFile, % "X" . (A_GuiWidth - 65) ; ###
+GuiControl, 1:Move, btnCheckExportFile, % "X" . (A_GuiWidth - 65) ; ###
+GuiControl, 1:Move, strMultiPurpose, % "W" . (A_GuiWidth - 305) ;  ### était 205
+GuiControl, 1:Move, btnMultiPurpose, % "X" . (A_GuiWidth - 190) ; ### était 90
+
+GuiControl, 1:Move, lvData, % "W" . (A_GuiWidth - 20) . " H" . (A_GuiHeight - 190)
+
+return
+
+
+
+GuiClose:
+ExitApp
+
+
+
 ; --------------------- GUI2  --------------------------
 
 
@@ -1401,64 +1491,16 @@ return
 ; --------------------- OTHER PROCEDURES --------------------------
 
 
-GuiSize: ; Expand or shrink the ListView in response to the user's resizing of the window.
-if A_EventInfo = 1  ; The window has been minimized.  No action needed.
-    return
-; Otherwise, the window has been resized or maximized. Resize the controls to match.
-GuiControl, 1:Move, tabCSVBuddy, % "W" . (A_GuiWidth - 20)
-
-GuiControl, 1:Move, strFileToLoad, % "W" . (A_GuiWidth - 200)
-GuiControl, 1:Move, btnHelpFileToLoad, % "X" . (A_GuiWidth - 90)
-GuiControl, 1:Move, btnSelectFileToLoad, % "X" . (A_GuiWidth - 65)
-GuiControl, 1:Move, strFileHeaderEscaped, % "W" . (A_GuiWidth - 200)
-GuiControl, 1:Move, btnHelpHeader, % "X" . (A_GuiWidth - 90)
-GuiControl, 1:Move, btnPreviewFile, % "X" . (A_GuiWidth - 65)
-GuiControl, 1:Move, btnLoadFile, % "X" . (A_GuiWidth - 65)
-
-GuiControl, 1:Move, strRenameEscaped, % "W" . (A_GuiWidth - 205)
-GuiControl, 1:Move, btnSetRename, % "X" . (A_GuiWidth - 95)
-GuiControl, 1:Move, btnHelpRename, % "X" . (A_GuiWidth - 40)
-GuiControl, 1:Move, strSelectEscaped, % "W" . (A_GuiWidth - 205)
-GuiControl, 1:Move, btnSetSelect, % "X" . (A_GuiWidth - 95)
-GuiControl, 1:Move, btnHelpSelect, % "X" . (A_GuiWidth - 40)
-GuiControl, 1:Move, strOrderEscaped, % "W" . (A_GuiWidth - 205)
-GuiControl, 1:Move, btnSetOrder, % "X" . (A_GuiWidth - 95)
-GuiControl, 1:Move, btnHelpOrder, % "X" . (A_GuiWidth - 40)
-
-GuiControl, 1:Move, strFileToSave, % "W" . (A_GuiWidth - 200)
-GuiControl, 1:Move, btnHelpFileToSave, % "X" . (A_GuiWidth - 90)
-GuiControl, 1:Move, btnSelectFileToSave, % "X" . (A_GuiWidth - 65)
-GuiControl, 1:Move, btnSaveFile, % "X" . (A_GuiWidth - 65)
-GuiControl, 1:Move, btnCheckFile, % "X" . (A_GuiWidth - 65)
-
-GuiControl, 1:Move, strFileToExport, % "W" . (A_GuiWidth - 200)
-GuiControl, 1:Move, btnHelpFileToExport, % "X" . (A_GuiWidth - 90)
-GuiControl, 1:Move, btnSelectFileToExport, % "X" . (A_GuiWidth - 65)
-GuiControl, 1:Move, btnExportFile, % "X" . (A_GuiWidth - 65) ; ###
-GuiControl, 1:Move, btnCheckExportFile, % "X" . (A_GuiWidth - 65) ; ###
-GuiControl, 1:Move, strMultiPurpose, % "W" . (A_GuiWidth - 305) ;  ### était 205
-GuiControl, 1:Move, btnMultiPurpose, % "X" . (A_GuiWidth - 190) ; ### était 90
-
-GuiControl, 1:Move, lvData, % "W" . (A_GuiWidth - 20) . " H" . (A_GuiHeight - 190)
-
-return
-
-
-
 UpdateCurrentHeader:
 Gui, 1:Submit, NoHide
-If !LV_GetCount("") ; no data in ListView, do not update header (required when called by ChangedFieldDelimiter1 or ChangedFieldEncapsulator1)
-	return
-strCurrentHeader := GetListViewHeader(strFieldDelimiter1, strFieldEncapsulator1)
-strEscapedCurrentHeader := StrEscape(strCurrentHeader)
-GuiControl, 1:, strFileHeaderEscaped, %strEscapedCurrentHeader%
-GuiControl, 1:, strRenameEscaped, %strEscapedCurrentHeader%
-GuiControl, 1:, strSelectEscaped, %strEscapedCurrentHeader%
-GuiControl, 1:, strOrderEscaped, %strEscapedCurrentHeader%
+strCurrentHeader := GetListViewHeader(strCurrentFieldDelimiter, strCurrentFieldEncapsulator)
+strCurrentHeaderEscaped := StrEscape(strCurrentHeader)
+; ### OUT? GuiControl, 1:, strFileHeaderEscaped, %strCurrentHeaderEscaped%
+GuiControl, 1:, strRenameEscaped, %strCurrentHeaderEscaped%
+GuiControl, 1:, strSelectEscaped, %strCurrentHeaderEscaped%
+GuiControl, 1:, strOrderEscaped, %strCurrentHeaderEscaped%
 if (radFixed)
 	Gosub, ClickRadFixed
-else if (radHTML)
-	Gosub, ClickRadHTML
 else if (radExpress)
 	Gosub, ClickRadExpress
 return
@@ -1589,22 +1631,16 @@ return
 
 
 
-GuiClose:
-ExitApp
-
-
-
 ; --------------------- FUNCTIONS --------------------------
 
 
-GetListViewHeader(strFieldDelimiter, strFieldEncapsulator)
+GetListViewHeader(strRealFieldDelimiter, strFieldEncapsulator)
 {
-	strDelimiter := StrMakeRealFieldDelimiter(strFieldDelimiter)
 	strHeader := ""
 	Loop, % LV_GetCount("Column")
 	{
 		LV_GetText(strColumnHeader, 0, A_Index)
-		strHeader := strHeader . Format4CSV(strColumnHeader, strDelimiter, strFieldEncapsulator) . strDelimiter
+		strHeader := strHeader . Format4CSV(strColumnHeader, strRealFieldDelimiter, strFieldEncapsulator) . strRealFieldDelimiter
 	}
 	StringTrimRight, strHeader, strHeader, 1 ; remove extra delimiter
 	return strHeader
@@ -1726,12 +1762,14 @@ NewFileName(strExistingFile, strNote := "", strExtension := "")
 	SplitPath, strExistingFile, , strOutDir, strOutExtension, strOutNameNoExt
 	if !StrLen(strExtension)
 		strExtension := strOutExtension
-	loop
-	{
-		strNewName := strOutDir . "\" . strOutNameNoExt . strNote . " (" . A_Index  . ")." . strExtension
-		if !FileExist(strNewName)
-			break
-	}
+	strNewName := strOutDir . "\" . strOutNameNoExt . strNote . "." . strExtension
+	if FileExist(strNewName)
+		loop
+		{
+			strNewName := strOutDir . "\" . strOutNameNoExt . strNote . " (" . A_Index  . ")." . strExtension
+			if !FileExist(strNewName)
+				break
+		}
 	return strNewName
 }
 
@@ -1772,6 +1810,20 @@ DelimitersOK(intTab)
 	}
 	else
 		return true
+}
+
+
+
+NewDelimiterOrEncapsulatorOK(strChecked)
+{
+	global strCurrentHeader
+	global strCurrentFieldDelimiter
+	global strCurrentFieldEncapsulator
+	objCurrentHeader := ReturnDSVObjectArray(strCurrentHeader, strCurrentFieldDelimiter, strCurrentFieldEncapsulator)
+	Loop, % objCurrentHeader.MaxIndex()
+		If InStr(objCurrentHeader[A_Index], strChecked)
+			return false
+	return true
 }
 
 
