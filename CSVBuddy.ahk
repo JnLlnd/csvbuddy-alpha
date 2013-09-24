@@ -114,15 +114,24 @@ Gui, 1:Add, Button,		y105	x+5		vbtnExportFile gButtonExportFile hidden, Export
 Gui, 1:Add, Button,		y137	x+5		vbtnCheckExportFile gButtonCheckExportFile hidden, Check
 
 Gui, 1:Tab, 5
-Gui, 1:Add, Link,		y+10	x10		vlblAboutText,
+Gui, 1:Font, s10 w700, Verdana
+Gui, 1:Add, Link,		y+10	x10		vlblAboutText1,
 (Join`s
 <a href="https://bitbucket.org/JnLlnd/csvbuddy">%strApplicationName% %strApplicationVersion%</a>
-`nby Jean Lalonde (<a href="http://www.autohotkey.com/board/user/4880-jnllnd/">JnLlnd</a> on AHK forum)
+)
+Gui, 1:Font, s9 w500, Arial
+Gui, 1:Add, Link,		y+4	x10		vlblAboutText2,
+(Join`s
+by Jean Lalonde (<a href="http://www.autohotkey.com/board/user/4880-jnllnd/">JnLlnd</a> on AHK forum)
+)
+Gui, 1:Font
+Gui, 1:Add, Link,		y+4	x10		vlblAboutText3,
+(Join`s
 `nAll rights reserved (c)2013 - DO NOT DISTRIBUTE WITHOUT AUTHOR AUTORIZATION
-
-`n`nUsing AHK library: <a href="https://www.github.com/JnLlnd/ObjCSV">ObjCSV v0.2</a>
+`nUsing AHK library: <a href="https://www.github.com/JnLlnd/ObjCSV">ObjCSV v0.2</a>
 `nUsing icon by: <a href="http://www.visualpharm.com">Visual Pharm</a>
 )
+
 
 Gui, 1:Tab
 
@@ -187,7 +196,7 @@ Hit "Select" to choose the CSV file to load.
 `n`nClick on the various Help (?) buttons to learn about the options offered by
 %strApplicationName%. When setting are ready, hit "Load" to import the file.
 
-`n`nNote that a maximum of 200 fields can be loaded.
+`n`nNote that %strApplicationName% can load CSV files with up to 200 fields.
 )
 Help("CSV File To Load", strHelp)
 return
@@ -197,7 +206,7 @@ return
 DetectDelimiters:
 Gui, 1:Submit, NoHide
 strFileHeaderUnEscaped := StrUnEscape(strFileHeaderEscaped)
-strCandidates := ",`t;:|~" ; check comma, tab, semi-colon, colon, pipe and tilde
+strCandidates := "`t;,:|~" ; check tab, semi-colon, comma, colon, pipe and tilde
 strFieldDelimiterDetected := "," ; comma by default if no delimiter is detected
 loop, Parse, strCandidates
 	if InStr(strFileHeaderUnEscaped, A_LoopField)
@@ -258,9 +267,9 @@ return
 ButtonHelpHeader:
 strHelp =
 (Join`s
-Most of the time, the first line of a CSV file contains the CSV header, a list of field names, separated by a field delimiter.
+Most of the time, the first line of a CSV file contains the CSV header, a list of field names separated by a field delimiter.
 If your file contains a CSV Header, select the radio button "Get CSV Header". When you select a file (using the "Select" button),
-the "CSV Header" zone displays the content of the first line of the file.
+the "CSV Header" zone displays the first line of the selected file.
 
 `n`nNote that invisible characters used as delimiters (for example Tab) are displayed with an escape character. For example,
 Tabs are shown as "``t".
@@ -307,8 +316,8 @@ ButtonHelpSetHeader:
 Gui, 1:Submit, NoHide
 strHelp =
 (Join`s
-If the first line of the CSV file contains the list of data columns field names, click "Get header from CSV file".
-If not, click "Set CSV header" and enter the list of field names separated by the Field delimiter.
+If the first line of the CSV file contains the list of field names, click "Get header from CSV file".
+If not, click "Set CSV header" and enter the list of field names separated by the "Field delimiter".
 )
 Help("CSV Get/Set CSV Header", strHelp)
 return
@@ -316,17 +325,6 @@ return
 
 
 ChangedFieldDelimiter1:
-/*
-strPreviousFieldDelimiter := strFieldDelimiter1
-Gui, 1:Submit, NoHide
-if NewDelimiterOrEncapsulatorOK(strFieldDelimiter1, strPreviousFieldDelimiter, strFieldEncaplsulator1)
-	GuiControl, 1:, strFieldDelimiter3, %strFieldDelimiter1%
-else
-{
-	GuiControl, 1:, strFieldDelimiter1, %strPreviousFieldDelimiter%
-}
-; ### OUT? Gosub, UpdateCurrentHeader
-*/
 return
 
 
@@ -338,8 +336,8 @@ Each field in the CSV header and in data rows of the file must be separated by a
 This is often comma ( , ), semicolon ( `; ) or Tab.
 
 `n`n%strApplicationName% will detect the delimiter if one of these characters is found in the first line
-of the file: comma, tab, semi-colon, colon, pipe or tilde. If this is not the correct delimiter, enter
-any single character or one of these letters for special invisible characters:
+of the file: tab, semi-colon, comma, colon, pipe or tilde. If this is not the correct delimiter, enter
+any single character or one of these replacement letters for invisible characters:
 
 `n`nt`tTab (HT)
 `nn`tLinefeed (LF)
@@ -348,7 +346,7 @@ any single character or one of these letters for special invisible characters:
 
 `n`nSpace can also be used as delimiter. Just enter a space in the text zone.
 
-`n`nTip: Use the "Preview" button to find what is the field delimiter in this file.
+`n`nTip: Use the "Preview" button to find what is the field delimiter in the selected file.
 )
 Help("Field Delimiter", strHelp)
 return
@@ -356,17 +354,6 @@ return
 
 
 ChangedFieldEncapsulator1:
-/*
-strPreviousFieldEncapsulator := strFieldEncapsulator1
-Gui, 1:Submit, NoHide
-if NewDelimiterOrEncapsulatorOK(strFieldEncapsulator1, strFieldDelimiter1, strPreviousFieldEncapsulator)
-	GuiControl, 1:, strFieldEncapsulator3, %strFieldEncapsulator1%
-else
-{
-	GuiControl, 1:, strFieldEncapsulator1, %strPreviousFieldEncapsulator%
-}
-; ### OUT ? Gosub, UpdateCurrentHeader
-*/
 return
 
 
@@ -378,13 +365,13 @@ When data fields in a CSV file contain characters used as delimiter or end-of-li
 This encapsulator is often double-quotes ( "..." ) or single quotes ( '...' ). For example, if comma is used as field delimiter
 in a CSV file, the data field "Smith, John" must be encapsulated because it contains a comma.
 
-`n`nIf a field contains a character used as encapsulator, this character must be doubled. For example, the data "John "Junior" Smith"
-must be stated as "John ""Junior"" Smith").
+`n`nIf a field contains the character used as encapsulator, this character must be doubled. For example, the data "John "Junior" Smith"
+must be stated as "John ""Junior"" Smith".
 
 `n`n%strApplicationName% will detect the encapsulator if one of these characters is found in the first line of the file:
 double-quote, single-quote, tilde or pipe. If this is not the correct encapsulator, enter any single character.
 
-`n`nTip: Use the "Preview" button to find what is the field encapsulator in this file.
+`n`nTip: Use the "Preview" button to find what is the field encapsulator in the selected file.
 )
 Help("Field Encapsulator", strHelp)
 return
@@ -425,12 +412,6 @@ return
 
 
 ButtonLoadFile:
-/*
-utiliser les délimiteurs dans tab 1
-màj les current
-màj les délim du tab 3 avec ceux du tab 1
-	GuiControl, 1:, strFieldDelimiter3, %strFieldDelimiter1%
-*/
 Gui, 1:+OwnDialogs
 Gui, 1:Submit, NoHide
 if !DelimitersOK(1)
@@ -460,7 +441,8 @@ if LV_GetCount("Column")
 		MsgBox, 36, %strApplicationName%,
 			(
 			If the CSV file you want to load have the same fields, in the same order, you can add file data to the current list.
-			`nDo you want to add to the content of this file to the list?
+			
+			Do you want to add to the content of this file to the list?
 			)
 		IfMsgBox, No
 			return
@@ -502,6 +484,8 @@ else
 	to the "4) Export" tab to export your data to fixed-width, HTML or XML format.
 	)
 	Help("Ready to edit", strHelp)
+	GuiControl, 1:, strFieldDelimiter3, %strCurrentVisibleFieldDelimiter%
+	GuiControl, 1:, strFieldEncapsulator3, %strCurrentFieldEncapsulator%
 }
 obj := ; release object
 return
@@ -517,19 +501,33 @@ if !LV_GetCount()
 	Oops("First load a CSV file in the first tab.")
 	return
 }
+objNewHeader := ReturnDSVObjectArray(StrUnEscape(strRenameEscaped), strCurrentFieldDelimiter, strCurrentFieldEncapsulator)
+intNbFieldNames := objNewHeader.MaxIndex()
+intNbColumns := LV_GetCount("Column")
 if !StrLen(strRenameEscaped)
 {
 	MsgBox, 52, %strApplicationName%,
 	(
 	In "Rename fields:", enter the list of field names separated by the field delimiter ( %strCurrentVisibleFieldDelimiter% ).
+	
 	Field names are automatically filled when you load a CSV file in the first tab.
 	
-	`n`nIf no field names are provided, numbers are used as field names. Do you want to use numbers as field names? 
+	If no field names are provided, numbers are used as field names. Do you want to use numbers as field names? 
 	)
 	IfMsgBox, No
 		return
 }
-objNewHeader := ReturnDSVObjectArray(StrUnEscape(strRenameEscaped), strCurrentFieldDelimiter, strCurrentFieldEncapsulator)
+else if (intNbFieldNames < intNbColumns)
+{
+	MsgBox, 52, %strApplicationName%,
+	(
+	There are less field names in the "Rename fields:" zone (%intNbFieldNames%) than the number of columns in the list (%intNbColumns%).
+
+	Do you want to use numbers as field names for remaining columns? 
+	)
+	IfMsgBox, No
+		return
+}
 Loop, % LV_GetCount("Column")
 {
 	if StrLen(objNewHeader[A_Index])
@@ -565,6 +563,11 @@ return
 
 ButtonSetSelect:
 Gui, 1:Submit, NoHide
+if !LV_GetCount()
+{
+	Oops("First load a CSV file in the first tab.")
+	return
+}
 if !StrLen(strSelectEscaped)
 {
 	Oops(
@@ -576,13 +579,27 @@ if !StrLen(strSelectEscaped)
 	))
 	return
 }
-if !LV_GetCount()
-{
-	Oops("First load a CSV file in the first tab.")
-	return
-}
 objCurrentHeader := ReturnDSVObjectArray(strCurrentHeader, strCurrentFieldDelimiter, strCurrentFieldEncapsulator)
 objNewHeader := ReturnDSVObjectArray(StrUnEscape(strSelectEscaped), strCurrentFieldDelimiter, strCurrentFieldEncapsulator)
+intPosPrevious := 0
+for intKey, strVal in objNewHeader
+{
+	intPosThisOne := PositionInArray(strVal, objCurrentHeader)
+	if !(intPosThisOne)
+	{
+		Oops(
+		(Join`s
+		"Field name """ . strVal . """ in the ""Select fields:"" zone not found in the list."
+		))
+		return
+	}
+	if (intPosThisOne <= intPosPrevious)
+	{
+		Oops("Field names in the ""Select fields:"" zone must be in the same order as the current list.")
+		return
+	}
+	intPosPrevious := intPosThisOne
+}
 intMaxCurrent := objCurrentHeader.MaxIndex()
 intMaxNew := objNewHeader.MaxIndex()
 intIndexCurrent := 1
@@ -618,9 +635,6 @@ strHelp =
 To remove fields (columns) from the list, enter the name of fields you want to keep, in the order they actually appear in the list,
 separated by the field delimiter ( %strCurrentVisibleFieldDelimiter% ) and click "Select".
 
-`n`nField names including the separator character ( %strCurrentVisibleFieldDelimiter% ) must be enclosed by the encapsulator character
-( %strCurrentFieldEncapsulator% ).
-
 `n`nTo save the file, click on the last tab "3) Save CSV File".
 )
 Help("Select Fields", strHelp)
@@ -646,6 +660,16 @@ if !LV_GetCount()
 	Oops("First load a CSV file in the first tab.")
 	return
 }
+objCurrentHeader := ReturnDSVObjectArray(strCurrentHeader, strCurrentFieldDelimiter, strCurrentFieldEncapsulator)
+objNewHeader := ReturnDSVObjectArray(StrUnEscape(strOrderEscaped), strCurrentFieldDelimiter, strCurrentFieldEncapsulator)
+for intKey, strVal in objNewHeader
+{
+	if !PositionInArray(strVal, objCurrentHeader)
+	{
+		Oops("Field name """ . strVal . """ in the ""Order fields:"" zone not found in the list.")
+		return
+	}
+}
 objNewCollection := ObjCSV_ListView2Collection("1", "lvData", StrUnEscape(strOrderEscaped), strCurrentFieldDelimiter
 	, strCurrentFieldEncapsulator, 1)
 LV_Delete() ;  better performance on large files when we delete rows before columns
@@ -663,11 +687,8 @@ ButtonHelpOrder:
 Gui, 1:Submit, NoHide
 strHelp =
 (Join`s
-To change the order of fields (columns) in the list, enter the name of fields in the new order you want to apply,
+To change the order of fields (columns) in the list, enter the field names in the new order you want to apply,
 separated by the field delimiter ( %strCurrentVisibleFieldDelimiter% ) and click "Order".
-
-`n`nField names including the separator character ( %strCurrentVisibleFieldDelimiter% ) must be enclosed by the encapsulator character
-( %strCurrentFieldEncapsulator% ).
 
 `n`nIf you enter less field names than in the original header, fields not included in the new order are removed from the list.
 However, if you only want to remove fields from the list (without changing the order), the "Select" button gives better
@@ -686,14 +707,15 @@ return
 ButtonHelpFileToSave:
 strHelp =
 (Join`s
-Enter the name of the CSV file destination file (the current program's directory is used if an absolute path isn't specified)
+Enter the name of the destination CSV file (the current program's directory is used if an absolute path isn't specified)
 or hit "Select" to choose the CSV destination file. When other options are OK, hit "Save" to save all or selected rows to the
 CSV file.
 
 `n`nNote that all rows are saved by default. You can select one row (using Click), a series of adjacent rows (using Shift-Click)
-or non contiguous rows (using Ctrl-Click or Shift-Ctrl-Click).
+or non contiguous rows (using Ctrl-Click or Shift-Ctrl-Click). You can also Right-Click in the list to select or deselect all rows,
+or to reverse the current row selection.
 
-`n`nNote that fields are saved in the order they appear in the list and rows are saved according to the current sorting order
+`n`nNote that fields are saved in the order they appear in the list and that rows are saved according to the current sorting order
 (click on a column name to sort rows).
 )
 Help("CSV File To Save", strHelp)
@@ -733,11 +755,11 @@ ButtonHelpFieldDelimiter3:
 strHelp =
 (Join`s
 Each field in the CSV header and in data rows of the file must be separated by a field delimiter.
-Enter the field delimiter character to use in the saved file.
+Enter the field delimiter character to use in the destination file.
 
 `n`nIt can be comma ( , ), semicolon ( `; ), Tab or any single character.
 
-`n`nFor the following special characters, use the letters on the left:
+`n`nUse the letters on the left as replacement for the following invisible characters:
 
 `n`nt`tTab (HT)
 `nn`tLinefeed (LF)
@@ -750,15 +772,15 @@ return
 
 
 ChangedFieldDelimiter3:
-strPrevious := strFieldDelimiter3
+strPreviousDelimiter := strFieldDelimiter3
 Gui, 1:Submit, NoHide
 if StrLen(strFieldDelimiter3)
 {
-	if !NewDelimiterOrEncapsulatorOK(strFieldDelimiter3)
+	if !NewDelimiterOrEncapsulatorOK(StrMakeRealFieldDelimiter(strFieldDelimiter3))
 	{
 		Oops("The new field delimiter ( " . strFieldDelimiter3 
 			. " ) cannot be choosen because it is currently in use in the field names.")
-		GuiControl, 1:, strFieldDelimiter3, %strPrevious%
+		GuiControl, 1:, strFieldDelimiter3, %strPreviousDelimiter%
 		return
 	}
 	Gosub, UpdateCurrentHeader
@@ -768,7 +790,7 @@ return
 
 
 ChangedFieldEncapsulator3:
-strPrevious := strFieldEncapsulator3
+strPreviousEncapsulator := strFieldEncapsulator3
 Gui, 1:Submit, NoHide
 if StrLen(strFieldEncapsulator3)
 {
@@ -776,7 +798,7 @@ if StrLen(strFieldEncapsulator3)
 	{
 		Oops("The new field encapsulator ( " . strFieldEncapsulator3 
 			. " ) cannot be choosen because it is currently in use in the field names.")
-		GuiControl, 1:, strFieldEncapsulator3, %strPrevious%
+		GuiControl, 1:, strFieldEncapsulator3, %strPreviousEncapsulator%
 		return
 	}
 	Gosub, UpdateCurrentHeader
@@ -788,14 +810,14 @@ return
 ButtonHelpEncapsulator3:
 strHelp =
 (Join`s
-When data fields in a CSV file contain characters used as delimiter or end-of-line, they must be enclosed in a field encapsulator.
-Enter the field encapsulator character to use in the saved file.
+Data fields in a CSV file containing the character used as field delimiter or an end-of-line must be enclosed in a field encapsulator.
+Enter the field encapsulator character to use in the destination file.
 
-`n`nThe encapsulator is often double-quotes ( "..." ) or single quotes ( '...' ). For example, if comma is used as field delimiter
-in the saved CSV file, the data field "Smith, John" is encapsulated because it contains a comma.
+`n`nThe encapsulator is often double-quotes ( "..." ) or single quotes ( '...' ). In the example "Smith, John", the data field
+containing a comma will be encapsulated because comma is also the field delimiter.
 
-`n`nIf a field contains the character used as encapsulator, this character is doubled. For example, the data "John "Junior" Smith"
-will be entered as "John ""Junior"" Smith").
+`n`nIf a field contains the character used as encapsulator, this encapsulator will be doubled. For example, the data "John "Junior" Smith"
+will be entered as "John ""Junior"" Smith".
 )
 Help("Field Encapsulator", strHelp)
 return
@@ -808,7 +830,7 @@ strHelp =
 (Join`s
 To save the field names as the first line of the CSV file, select "Save with header".
 
-`n`nIf you select "Save without header", the first line of the file will contain the data of the first row to save.
+`n`nIf you select "Save without header", the first line of the file will contain the data of the first row of the list.
 )
 Help("Save CSV Header", strHelp)
 return
@@ -835,8 +857,9 @@ ButtonHelpSaveMultiline:
 Gui, 1:Submit, NoHide
 strHelp =
 (Join`s
-If text fields contain line breaks, you can decide if line breaks will be saved as is or replaced with a character (or a sequence of characters)
-in order to keep these fields on a single line.
+If a field contains line break, you can decide if this line break is saved as is or if it is replaced with a character (or a sequence of characters)
+in order to keep the field on a single line. This can be useful if, later, you want to open this file in a software that do not support multi-line
+fields (e.g. MS Excel).
 
 `n`nIf you select "Save multi-line", line breaks are saved unchanged.
 
@@ -897,10 +920,10 @@ or hit "Select" to choose the destination file. When other options are OK, hit "
 destination file.
 
 `n`nNote that all rows are saved by default. You can select one row (using Click), a series of adjacent rows (using Shift-Click)
-or non contiguous rows (using Ctrl-Click or Shift-Ctrl-Click).
+or non contiguous rows (using Ctrl-Click or Shift-Ctrl-Click). You can also Right-Click in the list to select or deselect all rows,
+or to reverse the current row selection.
 
-`n`nFields are exported in the order they appear in the list and rows are saved according to the current sorting order (click on
-a column name to sort rows).
+`n`nRows are saved according to the current sorting order (click on a column name to sort rows).
 )
 Help("Export data", strHelp)
 return
@@ -1029,18 +1052,19 @@ Choose one of these export formats:
 
 `n`n• Fixed-width: To export to a text file where each record appears on a separate line, and the width of each field remains consistent across records.
 Field names can be optionaly inserted on the first line. Field names and data fields shorter than their width are padded with trailing spaces. Field
-names and data fields longer than their width are truncated at their maximal width.
+names and data fields longer than their width are truncated at their maximal width. Fields are exported in the order they appear in the list.
 
-`n`n• HTML: To build an HTML file based on a template file including header, row and footer templates, where variable names are replaced with the content
-in each record of the collection.
+`n`n• HTML: To build an HTML file based on a template file specifying header and footer templates, and a row template where variable names are replaced with the content
+of each record in the collection.
 
 `n`n• XML: To build an XML file from the content of the collection. You must ensure that field names and field data comply with the rules of XML syntax.
+Fields are exported in the order they appear in the list.
 
-`n`n• Express: To build a text file based on a row template where variable names are replaced with the content in each record of the collection.
+`n`n• Express: To build a text file based on a row template where variable names are replaced with the content of each record in the collection.
 
-`n`nSelect the export format and click the "... Export Help" button for more instructions about the selected format.
+`n`nSelect the export format. An additional "... Export Help" button will provide more instructions about the selected format.
 
-`n`nClick "Export" button to export data and the "Check" button to see the result in the destination file.
+`n`nClick the "Export" button to export data and the "Check" button to see the result in the destination file.
 )
 Help("Export Format", strHelp)
 return
@@ -1055,8 +1079,8 @@ if (radFixed)
 	Transfer the selected fields from a collection of objects to a fixed-width file.
 	
 	`n`nIn the "Fields width:", enter each field name to include in the file, followed by the width of this field. Field names and width values are
-	separated by the "Field delimiter:" specified in the tab "3) Save CSV File". Initialy, the "Fields width:" zone includes all fields with
-	a default width. To change the default width, click the "Change default width" button.
+	separated by the field delimiter ( %strFieldDelimiter3% ) specified in the tab "3) Save CSV File". Initialy, the "Fields width:" zone includes all fields with
+	a default width of %intDefaultWidth% characters. To change the default width, click the "Change default width" button.
 	
 	`n`nField names and data fields shorter than their width are padded with trailing spaces. Field names and data fields longer than their width
 	are truncated at their maximal width.
@@ -1066,7 +1090,7 @@ if (radFixed)
 
 	`n`nA fixed-width file should not include end-of-line within data. If it does and if a value is entered in the "End-of-line replacement:" on
 	the tab "3) Save CSV File" (click "Save single-line" to see this option), end-of-line in multi-line fields are replaced by a character or string
-	of your choice. This value is included in the fixed-width character count.
+	of your choice. This string is included in the fixed-width character count.
 
 	`n`nClick "Export" button to export data and the "Check" button to see the result in the destination file.
 	)
@@ -1076,19 +1100,18 @@ else if (radHTML)
 {
 	strHelp =
 	(Join`s
-	Build an HTML file based on a template file including header, row and footer templates, where variable names are replaced with the content
-	in each record of the collection.
+	Build an HTML file based on a template file specifying header and footer templates, and a row template where variable names are replaced with the content of each record in the collection.
 
 	`n`nEnter the template file name in the "HTML template:" or click "Select HTML template" to choose it. The template is divided in three sections: the header template (from the start of the file to the start of the row template), the row template (delimited by the markups ¤ROWS¤ and ¤/ROWS¤) and the footer template (from the end of the row template to the end of the file).
 	
 	`n`nThe row template is repeated in the output file for each record in the collection. Field names encapsulated by the ¤ character (ASCII code 164) are replaced by the matching data in each record. Also, ¤ROWNUMBER¤ is replaced by the current row number.
 	
 	`n`nIn the header and footer, the following variables are replaced by parts of the destination file name:
-	`n¤FILENAME¤ file name without its path, but including its extension
-	`n¤DIR¤ drive letter or share name, if present, and directory of the file, final backslash excluded
-	`n¤EXTENSION¤ file's extension, dot excluded
-	`n¤NAMENOEXT¤ file name without its path, dot and extension
-	`n¤DRIVE¤ drive letter or server name, if present
+	`n  ¤FILENAME¤ file name without its path, but including its extension
+	`n  ¤DIR¤ drive letter or share name, if present, and directory of the file, final backslash excluded
+	`n  ¤EXTENSION¤ file's extension, dot excluded
+	`n  ¤NAMENOEXT¤ file name without its path, dot and extension
+	`n  ¤DRIVE¤ drive letter or server name, if present
 
 	`n`nThis simple example, where each record has two fields named "Field1" and "Field2", shows the use of the various markups and variables:
 
@@ -1110,7 +1133,7 @@ else if (radHTML)
 	`nSource: ¤DIR¤\¤FILENAME¤
 	`n</BODY>
 
-	`n`nClick "Export" button to export data and the "Check" button to see the result in the destination file.
+	`n`nClick "Export" button to export data and the "Check" button to see the resulting HTML file in your default browser.
 	)
 	Help("HTML Export", strHelp)
 }
@@ -1142,7 +1165,7 @@ else if (radExpress)
 {
 	strHelp =
 	(Join`s
-	Build a text file based on a row template where variable names are replaced with the content in each record of the collection.
+	Build a text file based on a row template where variable names are replaced with the content of each record in the collection.
 	
 	`n`nIn the "Express template:" zone, enter the template for each row of data in the collection. In this template, field names
 	encapsulated by the character ¤ (ASCII code 164) are replaced by the matching data in each record. Also, ¤ROWNUMBER¤ is replaced
@@ -1154,7 +1177,7 @@ else if (radExpress)
 	`n`t``r`treplaced by Carriage return (CR)
 	`n`t``f`treplaced by Form feed (FF)
 
-	`n`nThe "Express template:" zone is initialized with all fields encapsulated by two ¤ characters and delimited with spaces.
+	`n`nThe "Express template:" zone is initialized with all fields encapsulated by the character ¤ (ASCII code 164) and delimited with spaces.
 
 	`n`nClick "Export" button to export data and the "Check" button to see the result in the destination file.
 	)
@@ -1424,10 +1447,10 @@ GuiControl, 1:Move, btnCheckFile, % "X" . (A_GuiWidth - 65)
 GuiControl, 1:Move, strFileToExport, % "W" . (A_GuiWidth - 200)
 GuiControl, 1:Move, btnHelpFileToExport, % "X" . (A_GuiWidth - 90)
 GuiControl, 1:Move, btnSelectFileToExport, % "X" . (A_GuiWidth - 65)
-GuiControl, 1:Move, btnExportFile, % "X" . (A_GuiWidth - 65) ; ###
-GuiControl, 1:Move, btnCheckExportFile, % "X" . (A_GuiWidth - 65) ; ###
-GuiControl, 1:Move, strMultiPurpose, % "W" . (A_GuiWidth - 305) ;  ### était 205
-GuiControl, 1:Move, btnMultiPurpose, % "X" . (A_GuiWidth - 190) ; ### était 90
+GuiControl, 1:Move, btnExportFile, % "X" . (A_GuiWidth - 65)
+GuiControl, 1:Move, btnCheckExportFile, % "X" . (A_GuiWidth - 65)
+GuiControl, 1:Move, strMultiPurpose, % "W" . (A_GuiWidth - 305)
+GuiControl, 1:Move, btnMultiPurpose, % "X" . (A_GuiWidth - 190)
 
 GuiControl, 1:Move, lvData, % "W" . (A_GuiWidth - 20) . " H" . (A_GuiHeight - 190)
 
@@ -1495,7 +1518,6 @@ UpdateCurrentHeader:
 Gui, 1:Submit, NoHide
 strCurrentHeader := GetListViewHeader(strCurrentFieldDelimiter, strCurrentFieldEncapsulator)
 strCurrentHeaderEscaped := StrEscape(strCurrentHeader)
-; ### OUT? GuiControl, 1:, strFileHeaderEscaped, %strCurrentHeaderEscaped%
 GuiControl, 1:, strRenameEscaped, %strCurrentHeaderEscaped%
 GuiControl, 1:, strSelectEscaped, %strCurrentHeaderEscaped%
 GuiControl, 1:, strOrderEscaped, %strCurrentHeaderEscaped%
@@ -1514,7 +1536,8 @@ if (LV_GetCount("Selected") = 1)
 	(
 	Only one record is selected. Do you want to save only this record?
 	
-	`n`nYes: Only one record will be saved.`nNo: All records will be saved.
+	Yes: Only one record will be saved.
+	No: All records will be saved.
 	)
 	IfMsgBox, No
 		LV_Modify(0, "Select") ; select all records
@@ -1699,7 +1722,7 @@ StrMakeEncodedFieldDelimiter(strConverted)
 Help(strTitle, strMessage)
 {
 	Gui, 1:+OwnDialogs 
-	MsgBox, 0, %strApplicationName% (%strApplicationVersion%) - %strTitle% Help,%strMessage%
+	MsgBox, 0, %strApplicationName% (%strApplicationVersion%) - %strTitle% Help, %strMessage%
 }
 
 
@@ -1707,7 +1730,7 @@ Help(strTitle, strMessage)
 Oops(strMessage)
 {
 	Gui, 1:+OwnDialogs 
-	MsgBox, 48, %strApplicationName% (%strApplicationVersion%),%strMessage%
+	MsgBox, 48, %strApplicationName% (%strApplicationVersion%), %strMessage%
 }
 
 
@@ -1742,9 +1765,12 @@ CheckIfFileExistOverwrite(strFileName)
 	{
 		MsgBox, 35, %strApplicationName% - File exists, 
 		(
-		File exists:`n%strFileName%`n`nDo you want to overwrite this file?
+		File exists:`n%strFileName%
 		
-		`n`nYes: The file will be overwritten.`nNo: Data will be added to the existing file.
+		Do you want to overwrite this file?
+		
+		Yes: The file will be overwritten.
+		No: Data will be added to the existing file.
 		)
 		IfMsgBox, Yes
 			return True
@@ -1824,6 +1850,16 @@ NewDelimiterOrEncapsulatorOK(strChecked)
 		If InStr(objCurrentHeader[A_Index], strChecked)
 			return false
 	return true
+}
+
+
+
+PositionInArray(strChecked, objArray)
+{
+	Loop, % objArray.MaxIndex()
+		If (objArray[A_Index] = strChecked)
+			return A_Index
+	return 0
 }
 
 
