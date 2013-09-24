@@ -14,7 +14,7 @@ This script uses the library ObjCSV v0.2 (https://github.com/JnLlnd/ObjCSV)
 ; --------------------- GLOBAL AND DEFAULT VALUES --------------------------
 
 global strApplicationName := "CSV Buddy"
-global strApplicationVersion := "v0.2.3 ALPHA"
+global strApplicationVersion := "v0.2.3 ALPHA" ; 2013-09-24
 
 intDefaultWidth := 16 ; used when export to fixed-width format
 strTemplateDelimiter := "¤" ; Chr(164)
