@@ -12,20 +12,19 @@ This script uses the library ObjCSV v0.2 (https://github.com/JnLlnd/ObjCSV)
 #LTrim ; omits spaces and tabs at the beginning of each line in continuation sections
 #Include %A_ScriptDir%\..\ObjCSV\lib\ObjCSV.ahk
 
-#MaxMem 132 ; Variable capacity in megs (default 64)Double capacity when in Unicode.
+#MaxMem 4095 ; Variable capacity in megs, default 64
+; (see http://auto-hotkey.com/boards/viewtopic.php?f=5&t=115&sid=4e0b3f9f47921441b3b8689138a489b7#p844)
+; Tested file size capacity: safe at 100 MB on 32-bits, no limit on 64-bits
 
 ; --------------------- GLOBAL AND DEFAULT VALUES --------------------------
 
 global strApplicationName := "CSV Buddy"
-global strApplicationVersion := "v0.2.4 ALPHA" ; 2013-09-29
+global strApplicationVersion := "v0.2.5 ALPHA" ; 2013-10-06
 
 intDefaultWidth := 16 ; used when export to fixed-width format
 strTemplateDelimiter := "¤" ; Chr(164)
 intProgressType := -2 ; Status Bar part 2
 
-intMaxFileSizeMegs := 128 ; with #MaxMem 132 *** not used yet
-; en 32 bits, avec maxmem 132, un fichier 128 mo plante avec Multiligne.
-; en 32 bits, avec maxmem 132, un fichier 120 mo plante? avec Multiligne.
 
 ; --------------------- GUI1 --------------------------
 
@@ -469,44 +468,50 @@ strCurrentHeader := StrUnEscape(strFileHeaderEscaped)
 strCurrentFieldDelimiter := StrMakeRealFieldDelimiter(strFieldDelimiter1)
 strCurrentVisibleFieldDelimiter := strFieldDelimiter1
 strCurrentFieldEncapsulator := strFieldEncapsulator1
-obj := ObjCSV_CSV2Collection(strFileToLoad, strCurrentHeader, radGetHeader, blnMultiline1, intProgressType, strCurrentFieldDelimiter
-	, strCurrentFieldEncapsulator, , , strEndoflineReplacement1, "Reading CSV data... (##%)")
 FileGetSize, intFileSize, %strFileToLoad%, K
 intActualSize := intActualSize + intFileSize
-SB_SetText(obj.MaxIndex() . " records (" . intActualSize . " K)", 1)
+obj := ObjCSV_CSV2Collection(strFileToLoad, strCurrentHeader, radGetHeader, blnMultiline1, intProgressType, strCurrentFieldDelimiter
+	, strCurrentFieldEncapsulator, , , strEndoflineReplacement1, "Reading CSV data... (##%)")
+if (ErrorLevel)
+{
+	strError := "CSV file not loaded.`n`nFile probably too large (" . intActualSize . " K)."
+	if (A_PtrSize = 4) ; 32-bits
+		strError := strError . " Try the 64-bits version for increased capacity."
+	Oops(strError)
+	SB_SetText("Empty", 1)
+	return
+}
 SB_SetText("", 2)
 ; ObjCSV_Collection2ListView(objCollection [, strGuiID = "", strListViewID = "", strFieldOrder = "", strFieldDelimiter = ","
 ;	, strEncapsulator = """", strSortFields = "", strSortOptions = "", blnProgress = 0])
 ObjCSV_Collection2ListView(obj, "1", "lvData", strCurrentHeader, strCurrentFieldDelimiter
-	, strCurrentFieldEncapsulator, , , intProgressType, "Loading data to ListView... (##%)")
-if !LV_GetCount()
+	, strCurrentFieldEncapsulator, , , intProgressType, "Loading data to list... (##%)")
+if (ErrorLevel)
 {
 	Oops("CSV file not loaded.`n`nNote that " . strApplicationName . " support files with a maximum of 200 fields.")
 	SB_SetText("Empty", 1)
 	return
 }
-else
-{
-	Gosub, UpdateCurrentHeader
-	strHelp =
-	(Join`s
-	Your CSV file is loaded.
-	
-	`n`nYou can sort rows by clicking on column headers. Choose sorting type: alphabetical, numeric integer or numeric float,
-	ascending or descending.
-	
-	`n`nDouble-click on a row to edit a record.  Right-click anywhere in the list view to select all rows, deselect all rows
-	or reverse selection.
-	
-	`n`nYou can use the "2) Edit Columns" tab to edit field names, select fields to keep or change fields order.
-	
-	`n`nWhen you will be ready, go to the "3) Save CSV File" tab to save all or selected rows in a new CSV file or
-	to the "4) Export" tab to export your data to fixed-width, HTML or XML format.
-	)
-	Help("Ready to edit", strHelp)
-	GuiControl, 1:, strFieldDelimiter3, %strCurrentVisibleFieldDelimiter%
-	GuiControl, 1:, strFieldEncapsulator3, %strCurrentFieldEncapsulator%
-}
+SB_SetText(LV_GetCount() . " records (" . intActualSize . " K)", 1)
+Gosub, UpdateCurrentHeader
+strHelp =
+(Join`s
+Your CSV file is loaded.
+
+`n`nYou can sort rows by clicking on column headers. Choose sorting type: alphabetical, numeric integer or numeric float,
+ascending or descending.
+
+`n`nDouble-click on a row to edit a record.  Right-click anywhere in the list view to select all rows, deselect all rows
+or reverse selection.
+
+`n`nYou can use the "2) Edit Columns" tab to edit field names, select fields to keep or change fields order.
+
+`n`nWhen you will be ready, go to the "3) Save CSV File" tab to save all or selected rows in a new CSV file or
+to the "4) Export" tab to export your data to fixed-width, HTML or XML format.
+)
+Help("Ready to edit", strHelp)
+GuiControl, 1:, strFieldDelimiter3, %strCurrentVisibleFieldDelimiter%
+GuiControl, 1:, strFieldEncapsulator3, %strCurrentFieldEncapsulator%
 obj := ; release object
 return
 
@@ -532,7 +537,7 @@ if !StrLen(strRenameEscaped)
 	
 	Field names are automatically filled when you load a CSV file in the first tab.
 	
-	If no field names are provided, numbers are used as field names. Do you want to use numbers as field names? 
+	If no field names are provided, "C" + numbers are used as field names. Do you want to use numbers as field names? 
 	)
 	IfMsgBox, No
 		return
@@ -541,9 +546,9 @@ else if (intNbFieldNames < intNbColumns)
 {
 	MsgBox, 52, %strApplicationName%,
 	(
-	There are less field names in the "Rename fields:" zone (%intNbFieldNames%) than the number of columns in the list (%intNbColumns%).
+	There are less field names in the "Rename fields:" zone (%intNbFieldNames% fields) than the number of columns in the list (%intNbColumns% fields).
 
-	Do you want to use numbers as field names for remaining columns? 
+	Do you want to use "C" + numbers as field names for remaining columns? 
 	)
 	IfMsgBox, No
 		return
@@ -553,7 +558,7 @@ Loop, % LV_GetCount("Column")
 	if StrLen(objNewHeader[A_Index])
 		LV_ModifyCol(A_Index, "", objNewHeader[A_Index])
 	else
-		LV_ModifyCol(A_Index, "", A_Index)
+		LV_ModifyCol(A_Index, "", "C" . A_Index)
 	LV_ModifyCol(A_Index, "AutoHdr")
 }
 Gosub, UpdateCurrentHeader
@@ -569,7 +574,7 @@ strHelp =
 To change field names (column headers), enter a new name for each fields, in the order they actually appear in the list,
 separated by the field delimiter ( %strCurrentVisibleFieldDelimiter% ) and click "Rename".
 
-`n`nIf you enter less names than the number of fields (or no field name at all), numbers are used as field names for remaining columns.
+`n`nIf you enter less names than the number of fields (or no field name at all), "C" + numbers are used as field names for remaining columns.
 
 `n`nField names including the separator character ( %strCurrentVisibleFieldDelimiter% ) must be enclosed by the encapsulator character
 ( %strCurrentFieldEncapsulator% ).
@@ -691,12 +696,14 @@ for intKey, strVal in objNewHeader
 	}
 }
 objNewCollection := ObjCSV_ListView2Collection("1", "lvData", StrUnEscape(strOrderEscaped), strCurrentFieldDelimiter
-	, strCurrentFieldEncapsulator, intProgressType, "Reading data from ListView... (##%)")
+	, strCurrentFieldEncapsulator, intProgressType, "Reading data from list... (##%)")
 LV_Delete() ; better performance on large files when we delete rows before columns
 loop, % LV_GetCount("Column")
 	LV_DeleteCol(1) ; delete all rows
 ObjCSV_Collection2ListView(objNewCollection, "1", "lvData", StrUnEscape(strOrderEscaped), strCurrentFieldDelimiter
-	, strCurrentFieldEncapsulator, , , intProgressType, "Loading data to ListView... (##%)")
+	, strCurrentFieldEncapsulator, , , intProgressType, "Loading data to list... (##%)")
+if (ErrorLevel)
+	Oops("Data not loaded to list. An unknown error occured.")
 Gosub, UpdateCurrentHeader
 objNewCollection := ; release object
 return
@@ -901,7 +908,7 @@ if (blnOverwrite < 0)
 gosub, CheckOneRow
 ; ObjCSV_ListView2Collection([strGuiID = "", strListViewID = "", strFieldOrder = "", strFieldDelimiter = ","
 ;	, strEncapsulator = """", blnProgress = 0])
-obj := ObjCSV_ListView2Collection("1", "lvData", , , , intProgressType, "Reading data from ListView... (##%)")
+obj := ObjCSV_ListView2Collection("1", "lvData", , , , intProgressType, "Reading data from list... (##%)")
 if (radSaveMultiline)
 	strEolReplacement := ""
 else
@@ -1579,7 +1586,7 @@ if !DelimitersOK(3)
 	return
 ; ObjCSV_ListView2Collection([strGuiID = "", strListViewID = "", strFieldOrder = "", strFieldDelimiter = ","
 ;	, strEncapsulator = """", blnProgress = 0])
-obj := ObjCSV_ListView2Collection("1", "lvData", , , , intProgressType, "Reading data from ListView... (##%)")
+obj := ObjCSV_ListView2Collection("1", "lvData", , , , intProgressType, "Reading data from list... (##%)")
 ; strFieldDelimiter3 et strFieldEncapsulator3 pour l'écriture de l'entête seulement
 strRealFieldDelimiter3 := StrMakeRealFieldDelimiter(strFieldDelimiter3)
 objFieldsArray := ObjCSV_ReturnDSVObjectArray(StrUnEscape(strMultiPurpose), strRealFieldDelimiter3, strFieldEncapsulator3)
@@ -1620,10 +1627,12 @@ return
 
 
 ExportHTML:
-obj := ObjCSV_ListView2Collection("1", "lvData", , , , intProgressType, "Reading data from ListView... (##%)")
+obj := ObjCSV_ListView2Collection("1", "lvData", , , , intProgressType, "Reading data from list... (##%)")
 ; ObjCSV_Collection2HTML(objCollection, strFilePath, strTemplateFile [, strTemplateEncapsulator = ~
 ;	, blnProgress = 0, blnOverwrite = 0])
 ObjCSV_Collection2HTML(obj, strFileToExport, strMultiPurpose, strTemplateDelimiter, intProgressType, blnOverwrite, , "Saving data to export file... (##%)")
+if (ErrorLevel)
+	Oops("Data not saved. An unknown error occured.")
 if FileExist(strFileToExport)
 {
 	GuiControl, 1:Show, btnCheckExportFile
@@ -1636,9 +1645,11 @@ return
 
 
 ExportXML:
-obj := ObjCSV_ListView2Collection("1", "lvData", , , , intProgressType, "Reading data from ListView... (##%)")
+obj := ObjCSV_ListView2Collection("1", "lvData", , , , intProgressType, "Reading data from list... (##%)")
 ; ObjCSV_Collection2XML(objCollection, strFilePath [, blnProgress = 0, blnOverwrite = 0])
 ObjCSV_Collection2XML(obj, strFileToExport, intProgressType, blnOverwrite, , "Saving data to export file... (##%)")
+if (ErrorLevel)
+	Oops("Data not saved. An unknown error occured.")
 if FileExist(strFileToExport)
 {
 	GuiControl, 1:Show, btnCheckExportFile
@@ -1650,7 +1661,7 @@ return
 
 
 ExportExpress:
-obj := ObjCSV_ListView2Collection("1", "lvData", , , , intProgressType, "Reading data from ListView... (##%)")
+obj := ObjCSV_ListView2Collection("1", "lvData", , , , intProgressType, "Reading data from list... (##%)")
 SplitPath, strFileToExport, , strOutDir
 strExpressTemplateTempFile := strOutDir . "\" . GUID() . ".TMP"
 strExpressTemplate := strTemplateDelimiter . "ROWS" . strTemplateDelimiter
