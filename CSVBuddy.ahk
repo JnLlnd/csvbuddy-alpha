@@ -212,6 +212,8 @@ Hit "Select" to choose the CSV file to load.
 %strApplicationName%. When setting are ready, hit "Load" to import the file.
 
 `n`nNote that %strApplicationName% can load CSV files with up to 200 fields.
+Also, although up to 8,191 characters of text can be stored in each cell,
+only the first 260 characters are displayed.
 )
 Help("CSV File To Load", strHelp)
 return
@@ -581,7 +583,7 @@ ButtonHelpRename:
 Gui, 1:Submit, NoHide
 strHelp =
 (Join`s
-To change field names (column headers), enter a new name for each fields, in the order they actually appear in the list,
+To change field names (column headers), enter a new name for each field, in the order they actually appear in the list,
 separated by the field delimiter ( %strCurrentVisibleFieldDelimiter% ) and click "Rename".
 
 `n`nIf you enter less names than the number of fields (or no field name at all), "C" + numbers are used as field names for remaining columns.
@@ -738,7 +740,7 @@ separated by the field delimiter ( %strCurrentVisibleFieldDelimiter% ) and click
 However, if you only want to remove fields from the list (without changing the order), the "Select" button gives better
 performance on large files.
 
-`n`nTo save the file, click on the last tab "3) Save CSV File" and select the destination file.
+`n`nTo save the file, click on the last tab "3) Save CSV File".
 )
 Help("Order Fields", strHelp)
 return
@@ -752,12 +754,13 @@ ButtonHelpFileToSave:
 strHelp =
 (Join`s
 Enter the name of the destination CSV file (the current program's directory is used if an absolute path isn't specified)
-or hit "Select" to choose the CSV destination file. If the destination file exists, data can be overwritten or appended.
+or hit "Select" to choose the CSV destination file. If the destination file exists, data can overwrite the existing file or be appended to it.
 When other options are OK, hit "Save" to save all or selected rows to the CSV file.
 
-`n`nNote that all rows are saved by default. You can select one row (using Click), a series of adjacent rows (using Shift-Click)
-or non contiguous rows (using Ctrl-Click or Shift-Ctrl-Click). You can also Right-Click in the list to select or deselect all rows,
-or to reverse the current row selection.
+`n`nNote that all rows are saved by default. But if one or more rows are selected, only these rows are saved.
+You can select one row (using Click), a series of adjacent rows (using Shift-Click) or non contiguous rows (using
+Ctrl-Click or Shift-Ctrl-Click). You can also Right-Click in the list to select or deselect all rows, or to reverse
+the current row selection.
 
 `n`nNote that fields are saved in the order they appear in the list and that rows are saved according to the current sorting order
 (click on a column name to sort rows).
@@ -968,11 +971,12 @@ Enter the name of the destination file of the export (the current program's dire
 or hit "Select" to choose the destination file. When other options are OK, hit "Export" to export all or selected rows to the
 destination file.
 
-`n`nNote that all rows are saved by default. You can select one row (using Click), a series of adjacent rows (using Shift-Click)
+`n`nNote that all rows are exported by default. But if one or more rows are selected, only these rows are exported.
+You can select one row (using Click), a series of adjacent rows (using Shift-Click)
 or non contiguous rows (using Ctrl-Click or Shift-Ctrl-Click). You can also Right-Click in the list to select or deselect all rows,
 or to reverse the current row selection.
 
-`n`nRows are saved according to the current sorting order (click on a column name to sort rows).
+`n`nRows are exported according to the current sorting order (click on a column name to sort rows).
 )
 Help("Export data", strHelp)
 return
@@ -1108,20 +1112,20 @@ strHelp =
 Choose one of these export formats:
 
 `n`n• Fixed-width: To export to a text file where each record appears on a separate line, and the width of each field remains consistent across records.
-Field names can be optionaly inserted on the first line. Field names and data fields shorter than their width are padded with trailing spaces. Field
+Field names can be optionally inserted on the first line. Field names and data fields shorter than their width are padded with trailing spaces. Field
 names and data fields longer than their width are truncated at their maximal width. Fields are exported in the order they appear in the list. If the
-destination file exists, data can be overwritten or appended.
+destination file exists, data can overwrite the existing file or be appended to it.
 
 `n`n• HTML: To build an HTML file based on a template file specifying header and footer templates, and a row template where variable names are replaced
-with the content of each record in the collection. If the destination file exists, data is overwritten.
+with the content of each record in the collection. If the destination file exists, it is overwritten.
 
 `n`n• XML: To build an XML file from the content of the collection. You must ensure that field names and field data comply with the rules of XML syntax.
-Fields are exported in the order they appear in the list. If the destination file exists, data is overwritten.
+Fields are exported in the order they appear in the list. If the destination file exists, it is overwritten.
 
 `n`n• Express: To build a text file based on a row template where variable names are replaced with the content of each record in the collection. If the
-destination file exists, data is overwritten.
+destination file exists, it is overwritten.
 
-`n`nSelect the export format. An additional "... Export Help" button will provide more instructions about the selected format.
+`n`nSelect the export format. An additional "<format> Export Help" button will provide more instructions about the selected format.
 
 `n`nClick the "Export" button to export data and the "Check" button to see the result in the destination file.
 )
@@ -1138,7 +1142,7 @@ if (radFixed)
 	Transfer the selected fields from a collection of objects to a fixed-width file.
 	
 	`n`nIn the "Fields width:", enter each field name to include in the file, followed by the width of this field. Field names and width values are
-	separated by the field delimiter ( %strFieldDelimiter3% ) specified in the tab "3) Save CSV File". Initialy, the "Fields width:" zone includes all fields with
+	separated by the field delimiter ( %strFieldDelimiter3% ) specified in the tab "3) Save CSV File". Initially, the "Fields width:" zone includes all fields with
 	a default width of %intDefaultWidth% characters. To change the default width, click the "Change default width" button.
 	
 	`n`nField names and data fields shorter than their width are padded with trailing spaces. Field names and data fields longer than their width
@@ -1151,7 +1155,7 @@ if (radFixed)
 	the tab "3) Save CSV File" (click "Save single-line" to see this option), end-of-line in multi-line fields are replaced by a character or string
 	of your choice. This string is included in the fixed-width character count.
 
-	`n`nClick "Export" button to export data and the "Check" button to see the result in the destination file.
+	`n`nClick the "Export" button to export data and the "Check" button to see the result in the destination file.
 	)
 	Help("Fixed-width Export", strHelp)
 }
@@ -1192,7 +1196,7 @@ else if (radHTML)
 	`nSource: ¤DIR¤\¤FILENAME¤
 	`n</BODY>
 
-	`n`nClick "Export" button to export data and the "Check" button to see the resulting HTML file in your default browser.
+	`n`nClick the "Export" button to export data and the "Check" button to see the resulting HTML file in your default browser.
 	)
 	Help("HTML Export", strHelp)
 }
@@ -1216,7 +1220,7 @@ else if (radXML)
 	`n    </Record>
 	`n</XMLExport>
 
-	`n`nClick "Export" button to export data and the "Check" button to see the result in the destination file.
+	`n`nClick the "Export" button to export data and the "Check" button to see the result in the destination file.
 	)
 	Help("XML Export", strHelp)
 }
@@ -1238,7 +1242,7 @@ else if (radExpress)
 
 	`n`nThe "Express template:" zone is initialized with all fields encapsulated by the character ¤ (ASCII code 164) and delimited with spaces.
 
-	`n`nClick "Export" button to export data and the "Check" button to see the result in the destination file.
+	`n`nClick the "Export" button to export data and the "Check" button to see the result in the destination file.
 	)
 	Help("Express Export", strHelp)
 }
