@@ -154,7 +154,7 @@ else if InStr(tabCSVBuddy, L(lTab0Edit))
 		GuiControl, 1:+Default, btnReady
 	else
 	{
-		Oops(lTab0FirstloadaCSVfileinthefi)
+		Oops(lTab0FirstloadaCSVfile)
 		GuiControl, 1:Choose, tabCSVBuddy, 1
 	}
 else if InStr(tabCSVBuddy, L(lTab0Save))
@@ -162,7 +162,7 @@ else if InStr(tabCSVBuddy, L(lTab0Save))
 		GuiControl, 1:+Default, btnSelectFileToSave
 	else
 	{
-		Oops(lTab0FirstloadaCSVfileinthefi)
+		Oops(lTab0FirstloadaCSVfile)
 		GuiControl, 1:Choose, tabCSVBuddy, 1
 	}
 else if InStr(tabCSVBuddy, L(lTab0Export))
@@ -170,7 +170,7 @@ else if InStr(tabCSVBuddy, L(lTab0Export))
 		GuiControl, 1:+Default, btnSelectFileToExport
 	else
 	{
-		Oops(lTab0FirstloadaCSVfileinthefi)
+		Oops(lTab0FirstloadaCSVfile)
 		GuiControl, 1:Choose, tabCSVBuddy, 1
 	}
 else if InStr(tabCSVBuddy, L(lTab0About))
@@ -185,7 +185,6 @@ return
 
 
 ; --------------------- TAB 1 --------------------------
-
 
 ButtonHelpFileToLoad:
 Help(lTab1HelpFileToLoad, lAppName, lAppName)
@@ -403,10 +402,10 @@ SB_SetText("", 2)
 ; ObjCSV_Collection2ListView(objCollection [, strGuiID = "", strListViewID = "", strFieldOrder = "", strFieldDelimiter = ","
 ;	, strEncapsulator = """", strSortFields = "", strSortOptions = "", intProgressType = 0, strProgressText = ""])
 ObjCSV_Collection2ListView(obj, "1", "lvData", strCurrentHeader, strCurrentFieldDelimiter
-	, strCurrentFieldEncapsulator, , , intProgressType, L(lTab1Loadingdatatolist)"Loading data to list... (##%)")
+	, strCurrentFieldEncapsulator, , , intProgressType, L(lTab0LoadingToList))
 if (ErrorLevel)
 {
-	Oops(L(lTab1CSVfilenotloadedMax200fields))
+	Oops(lTab1CSVfilenotloadedMax200fields)
 	SB_SetText(lSBEmpty, 1)
 	return
 }
@@ -421,12 +420,12 @@ return
 
 
 ; --------------------- TAB 2 --------------------------
-;####
+
 ButtonSetRename:
 Gui, 1:Submit, NoHide
 if !LV_GetCount()
 {
-	Oops("First load a CSV file in the first tab.")
+	Oops(lTab0FirstloadaCSVfile)
 	return
 }
 ; ObjCSV_ReturnDSVObjectArray(strCurrentDSVLine, strDelimiter = ",", strEncapsulator = """")
@@ -435,25 +434,13 @@ intNbFieldNames := objNewHeader.MaxIndex()
 intNbColumns := LV_GetCount("Column")
 if !StrLen(strRenameEscaped)
 {
-	MsgBox, 52, %lAppName%,
-	(
-	In "Rename fields:", enter the list of field names separated by the field delimiter ( %strCurrentVisibleFieldDelimiter% ).
-	
-	Field names are automatically filled when you load a CSV file in the first tab.
-	
-	If no field names are provided, "C" + numbers are used as field names. Do you want to use numbers as field names? 
-	)
+	MsgBox, 52, %lAppName%, % L(lTab2RenameNoString, strCurrentVisibleFieldDelimiter)
 	IfMsgBox, No
 		return
 }
 else if (intNbFieldNames < intNbColumns)
 {
-	MsgBox, 52, %lAppName%,
-	(
-	There are less field names in the "Rename fields:" zone (%intNbFieldNames% fields) than the number of columns in the list (%intNbColumns% fields).
-
-	Do you want to use "C" + numbers as field names for remaining columns? 
-	)
+	MsgBox, 52, %lAppName%, % L(lTab2RenameLessNames, intNbFieldNames, intNbColumns)
 	IfMsgBox, No
 		return
 }
@@ -473,19 +460,7 @@ return
 
 ButtonHelpRename:
 Gui, 1:Submit, NoHide
-strHelp =
-(Join`s
-To change field names (column headers), enter a new name for each field, in the order they actually appear in the list,
-separated by the field delimiter ( %strCurrentVisibleFieldDelimiter% ) and click "Rename".
-
-`n`nIf you enter less names than the number of fields (or no field name at all), "C" + numbers are used as field names for remaining columns.
-
-`n`nField names including the separator character ( %strCurrentVisibleFieldDelimiter% ) must be enclosed by the encapsulator character
-( %strCurrentFieldEncapsulator% ).
-
-`n`nTo save the file, click on the tab "3) Save CSV File".
-)
-Help("Rename Fields", strHelp)
+Help(lTab2HelpRename, strCurrentVisibleFieldDelimiter, strCurrentVisibleFieldDelimiter, strCurrentFieldEncapsulator)
 return
 
 
@@ -494,18 +469,12 @@ ButtonSetSelect:
 Gui, 1:Submit, NoHide
 if !LV_GetCount()
 {
-	Oops("First load a CSV file in the first tab.")
+	Oops(lTab0FirstloadaCSVfile)
 	return
 }
 if !StrLen(strSelectEscaped)
 {
-	Oops(
-	(Join`s
-	"First enter the names of the fields you want to keep in the list, separated by the field delimiter ( " . strCurrentVisibleFieldDelimiter . " ),
-	keeping their current order.
-	
-	`n`nField names are automatically filled when you load a CSV file in the first tab."
-	))
+	Oops(lTab2SelectNoString, strCurrentVisibleFieldDelimiter)
 	return
 }
 ; ObjCSV_ReturnDSVObjectArray(strCurrentDSVLine, strDelimiter = ",", strEncapsulator = """")
@@ -517,15 +486,12 @@ for intKey, strVal in objNewHeader
 	intPosThisOne := PositionInArray(strVal, objCurrentHeader)
 	if !(intPosThisOne)
 	{
-		Oops(
-		(Join`s
-		"Field name """ . strVal . """ in the ""Select fields:"" zone not found in the list."
-		))
+		Oops(lTab2SelectFieldMissing, strVal)
 		return
 	}
 	if (intPosThisOne <= intPosPrevious)
 	{
-		Oops("Field names in the ""Select fields:"" zone must be in the same order as the current list.")
+		Oops(lTab2SelectBadOrder)
 		return
 	}
 	intPosPrevious := intPosThisOne
@@ -560,14 +526,7 @@ return
 
 ButtonHelpSelect:
 Gui, 1:Submit, NoHide
-strHelp =
-(Join`s
-To remove fields (columns) from the list, enter the name of fields you want to keep, in the order they actually appear in the list,
-separated by the field delimiter ( %strCurrentVisibleFieldDelimiter% ) and click "Select".
-
-`n`nTo save the file, click on the last tab "3) Save CSV File".
-)
-Help("Select Fields", strHelp)
+Help(lTab2HelpSelect, strCurrentVisibleFieldDelimiter)
 return
 
 
@@ -576,18 +535,12 @@ ButtonSetOrder:
 Gui, 1:Submit, NoHide
 if !StrLen(strSelectEscaped)
 {
-	Oops(
-	(Join`s
-	"First enter the names of the fields you want to keep in the list, in the desired order,
-	separated by the field delimiter ( " . strCurrentVisibleFieldDelimiter . " ).
-	
-	`n`nField names are automatically filled when you load a CSV file in the first tab."
-	))
+	Oops(lTab2OrderNoString, strCurrentVisibleFieldDelimiter)
 	return
 }
 if !LV_GetCount()
 {
-	Oops("First load a CSV file in the first tab.")
+	Oops(lTab0FirstloadaCSVfile)
 	return
 }
 ; ObjCSV_ReturnDSVObjectArray(strCurrentDSVLine, strDelimiter = ",", strEncapsulator = """")
@@ -597,7 +550,7 @@ for intKey, strVal in objNewHeader
 {
 	if !PositionInArray(strVal, objCurrentHeader)
 	{
-		Oops("Field name """ . strVal . """ in the ""Order fields:"" zone not found in the list.")
+		Oops(lTab2OrderFieldMissing, strVal)
 		return
 	}
 }
@@ -605,16 +558,16 @@ LV_Modify(0, "-Select") ; Make sure all rows will be transfered to objNewCollect
 ; ObjCSV_ListView2Collection([strGuiID = "", strListViewID = "", strFieldOrder = "", strFieldDelimiter = ","
 ;	, strEncapsulator = """", intProgressType = 0, strProgressText = ""])
 objNewCollection := ObjCSV_ListView2Collection("1", "lvData", StrUnEscape(strOrderEscaped), strCurrentFieldDelimiter
-	, strCurrentFieldEncapsulator, intProgressType, "Reading data from list... (##%)")
+	, strCurrentFieldEncapsulator, intProgressType, L(lTab0ReadingFromList))
 LV_Delete() ; better performance on large files when we delete rows before columns
 loop, % LV_GetCount("Column")
 	LV_DeleteCol(1) ; delete all rows
 ; ObjCSV_Collection2ListView(objCollection [, strGuiID = "", strListViewID = "", strFieldOrder = "", strFieldDelimiter = ","
 ;	, strEncapsulator = """", strSortFields = "", strSortOptions = "", intProgressType = 0, strProgressText = ""])
 ObjCSV_Collection2ListView(objNewCollection, "1", "lvData", StrUnEscape(strOrderEscaped), strCurrentFieldDelimiter
-	, strCurrentFieldEncapsulator, , , intProgressType, "Loading data to list... (##%)")
+	, strCurrentFieldEncapsulator, , , intProgressType, lTab0LoadingToList)
 if (ErrorLevel)
-	Oops("Data not loaded to list. An unknown error occured.")
+	Oops(lTab2OrderNotLoaded)
 Gosub, UpdateCurrentHeader
 objNewCollection := ; release object
 return
@@ -623,41 +576,15 @@ return
 
 ButtonHelpOrder:
 Gui, 1:Submit, NoHide
-strHelp =
-(Join`s
-To change the order of fields (columns) in the list, enter the field names in the new order you want to apply,
-separated by the field delimiter ( %strCurrentVisibleFieldDelimiter% ) and click "Order".
-
-`n`nIf you enter less field names than in the original header, fields not included in the new order are removed from the list.
-However, if you only want to remove fields from the list (without changing the order), the "Select" button gives better
-performance on large files.
-
-`n`nTo save the file, click on the last tab "3) Save CSV File".
-)
-Help("Order Fields", strHelp)
+Help(lTab2HelpOrder, strCurrentVisibleFieldDelimiter)
 return
 
 
 
 ; --------------------- TAB 3 --------------------------
 
-
 ButtonHelpFileToSave:
-strHelp =
-(Join`s
-Enter the name of the destination CSV file (the current program's directory is used if an absolute path isn't specified)
-or hit "Select" to choose the CSV destination file. If the destination file exists, data can overwrite the existing file or be appended to it.
-When other options are OK, hit "Save" to save all or selected rows to the CSV file.
-
-`n`nNote that all rows are saved by default. But if one or more rows are selected, only these rows are saved.
-You can select one row (using Click), a series of adjacent rows (using Shift-Click) or non contiguous rows (using
-Ctrl-Click or Shift-Ctrl-Click). You can also Right-Click in the list to select or deselect all rows, or to reverse
-the current row selection.
-
-`n`nNote that fields are saved in the order they appear in the list and that rows are saved according to the current sorting order
-(click on a column name to sort rows).
-)
-Help("CSV File To Save", strHelp)
+Help(lTab3HelpFileToSave)
 return
 
 
@@ -665,7 +592,7 @@ return
 ButtonSelectFileToSave:
 Gui, 1:Submit, NoHide
 Gui, 1:+OwnDialogs 
-FileSelectFile, strOutputFile, 2, %A_ScriptDir%, Select CSV File to save
+FileSelectFile, strOutputFile, 2, %A_ScriptDir%, % L(lTab3SelectCSVFiletosave)
 if !(StrLen(strOutputFile))
 	return
 GuiControl, 1:, strFileToSave, %strOutputFile%
@@ -691,21 +618,7 @@ return
 
 
 ButtonHelpFieldDelimiter3:
-strHelp =
-(Join`s
-Each field in the CSV header and in data rows of the file must be separated by a field delimiter.
-Enter the field delimiter character to use in the destination file.
-
-`n`nIt can be comma ( , ), semicolon ( `; ), Tab or any single character.
-
-`n`nUse the letters on the left as replacement for the following invisible characters:
-
-`n`nt`tTab (HT)
-`nn`tLinefeed (LF)
-`nr`tCarriage return (CR)
-`nf`tForm feed (FF)
-)
-Help("Field Delimiter", strHelp)
+Help(lTab3HelpFieldDelimiter3)
 return
 
 
@@ -719,8 +632,7 @@ if StrLen(strFieldDelimiter3)
 {
 	if !NewDelimiterOrEncapsulatorOK(StrMakeRealFieldDelimiter(strFieldDelimiter3))
 	{
-		Oops("The new field delimiter ( " . strFieldDelimiter3 
-			. " ) cannot be choosen because it is currently in use in the field names.")
+		Oops(lTab3BadDelimiter, strFieldDelimiter3)
 		GuiControl, 1:, strFieldDelimiter3, %strPreviousDelimiter%
 		return
 	}
@@ -739,8 +651,7 @@ if StrLen(strFieldEncapsulator3)
 {
 	if !NewDelimiterOrEncapsulatorOK(strFieldEncapsulator3)
 	{
-		Oops("The new field encapsulator ( " . strFieldEncapsulator3 
-			. " ) cannot be choosen because it is currently in use in the field names.")
+		Oops(lTab3BadEncapsulator, strFieldEncapsulator3)
 		GuiControl, 1:, strFieldEncapsulator3, %strPreviousEncapsulator%
 		return
 	}
@@ -751,31 +662,13 @@ return
 
 
 ButtonHelpEncapsulator3:
-strHelp =
-(Join`s
-Data fields in a CSV file containing the character used as field delimiter or an end-of-line must be enclosed in a field encapsulator.
-Enter the field encapsulator character to use in the destination file.
-
-`n`nThe encapsulator is often double-quotes ( "..." ) or single quotes ( '...' ). In the example "Smith, John", the data field
-containing a comma will be encapsulated because comma is also the field delimiter.
-
-`n`nIf a field contains the character used as encapsulator, this encapsulator will be doubled. For example, the data "John "Junior" Smith"
-will be entered as "John ""Junior"" Smith".
-)
-Help("Field Encapsulator", strHelp)
+Help(lTab3HelpEncapsulator3)
 return
 
 
 
 ButtonHelpSaveHeader:
-Gui, 1:Submit, NoHide
-strHelp =
-(Join`s
-To save the field names as the first line of the CSV file, select "Save with header".
-
-`n`nIf you select "Save without header", the first line of the file will contain the data of the first row of the list.
-)
-Help("Save CSV Header", strHelp)
+Help(lTab3HelpSaveHeader)
 return
 
 
@@ -798,18 +691,7 @@ return
 
 ButtonHelpSaveMultiline:
 Gui, 1:Submit, NoHide
-strHelp =
-(Join`s
-If a field contains line break, you can decide if this line break is saved as is or if it is replaced with a character (or a sequence of characters)
-in order to keep the field on a single line. This can be useful if, later, you want to open this file in a software that do not support multi-line
-fields (e.g. MS Excel).
-
-`n`nIf you select "Save multi-line", line breaks are saved unchanged.
-
-`n`nIf you select "Save single-line", enter the replacement sequence for line breaks in the "End-of-line replacement:" zone.
-By default, the replacement character is "¶" (ASCII code 182).
-)
-Help("Saving multi-line fields", strHelp)
+Help(lTab3HelpSaveMultiline)
 return
 
 
@@ -824,7 +706,7 @@ if (blnOverwrite < 0)
 gosub, CheckOneRow
 ; ObjCSV_ListView2Collection([strGuiID = "", strListViewID = "", strFieldOrder = "", strFieldDelimiter = ","
 ;	, strEncapsulator = """", intProgressType = 0, strProgressText = ""])
-obj := ObjCSV_ListView2Collection("1", "lvData", , , , intProgressType, "Reading data from list... (##%)")
+obj := ObjCSV_ListView2Collection("1", "lvData", , , , intProgressType, L(lTab0ReadingFromList))
 if (radSaveMultiline)
 	strEolReplacement := ""
 else
@@ -855,7 +737,7 @@ return
 
 
 ; --------------------- TAB 4 --------------------------
-
+;####
 ButtonHelpFileToExport:
 strHelp =
 (Join`s
@@ -1512,7 +1394,7 @@ if !DelimitersOK(3)
 	return
 ; ObjCSV_ListView2Collection([strGuiID = "", strListViewID = "", strFieldOrder = "", strFieldDelimiter = ","
 ;	, strEncapsulator = """", intProgressType = 0, strProgressText = ""])
-obj := ObjCSV_ListView2Collection("1", "lvData", , , , intProgressType, "Reading data from list... (##%)")
+obj := ObjCSV_ListView2Collection("1", "lvData", , , , intProgressType, L(lTab0ReadingFromList))
 ; strFieldDelimiter3 et strFieldEncapsulator3 pour l'écriture de l'entête seulement
 strRealFieldDelimiter3 := StrMakeRealFieldDelimiter(strFieldDelimiter3)
 ; ObjCSV_ReturnDSVObjectArray(strCurrentDSVLine, strDelimiter = ",", strEncapsulator = """")
@@ -1558,7 +1440,7 @@ return
 ExportHTML:
 ; ObjCSV_ListView2Collection([strGuiID = "", strListViewID = "", strFieldOrder = "", strFieldDelimiter = ","
 ;	, strEncapsulator = """", intProgressType = 0, strProgressText = ""])
-obj := ObjCSV_ListView2Collection("1", "lvData", , , , intProgressType, "Reading data from list... (##%)")
+obj := ObjCSV_ListView2Collection("1", "lvData", , , , intProgressType, L(lTab0ReadingFromList))
 ; ObjCSV_Collection2HTML(objCollection, strFilePath, strTemplateFile [, strTemplateEncapsulator = ~
 ;	, intProgressType = 0, blnOverwrite = 0, strProgressText = ""])
 ObjCSV_Collection2HTML(obj, strFileToExport, strMultiPurpose, strTemplateDelimiter
@@ -1579,7 +1461,7 @@ return
 ExportXML:
 ; ObjCSV_ListView2Collection([strGuiID = "", strListViewID = "", strFieldOrder = "", strFieldDelimiter = ","
 ;	, strEncapsulator = """", intProgressType = 0, strProgressText = ""])
-obj := ObjCSV_ListView2Collection("1", "lvData", , , , intProgressType, "Reading data from list... (##%)")
+obj := ObjCSV_ListView2Collection("1", "lvData", , , , intProgressType, L(lTab0ReadingFromList))
 ; ObjCSV_Collection2XML(objCollection, strFilePath [, intProgressType = 0, blnOverwrite = 0, strProgressText = ""])
 ObjCSV_Collection2XML(obj, strFileToExport, intProgressType, blnOverwrite, "Saving data to export file... (##%)")
 if (ErrorLevel)
@@ -1597,7 +1479,7 @@ return
 ExportExpress:
 ; ObjCSV_ListView2Collection([strGuiID = "", strListViewID = "", strFieldOrder = "", strFieldDelimiter = ","
 ;	, strEncapsulator = """", intProgressType = 0, strProgressText = ""])
-obj := ObjCSV_ListView2Collection("1", "lvData", , , , intProgressType, "Reading data from list... (##%)")
+obj := ObjCSV_ListView2Collection("1", "lvData", , , , intProgressType, L(lTab0ReadingFromList))
 SplitPath, strFileToExport, , strOutDir
 strExpressTemplateTempFile := strOutDir . "\" . GUID() . ".TMP"
 strExpressTemplate := strTemplateDelimiter . "ROWS" . strTemplateDelimiter
