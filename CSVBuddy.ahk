@@ -11,6 +11,7 @@ This script uses the library ObjCSV v0.3 (https://github.com/JnLlnd/ObjCSV)
 #SingleInstance force
 #LTrim ; omits spaces and tabs at the beginning of each line in continuation sections
 #Include %A_ScriptDir%\..\ObjCSV\lib\ObjCSV.ahk
+#Include %A_ScriptDir%\CSVBuddy_LANG.ahk
 
 #MaxMem 4095 ; Variable capacity in megs, default 64
 ; (see http://auto-hotkey.com/boards/viewtopic.php?f=5&t=115&sid=4e0b3f9f47921441b3b8689138a489b7#p844)
@@ -18,127 +19,111 @@ This script uses the library ObjCSV v0.3 (https://github.com/JnLlnd/ObjCSV)
 
 ; --------------------- GLOBAL AND DEFAULT VALUES --------------------------
 
-global strApplicationName := "CSV Buddy"
-global strApplicationVersion := "v0.2.6 ALPHA" ; 2013-10-10
-
-intDefaultWidth := 16 ; used when export to fixed-width format
-strTemplateDelimiter := "¤" ; Chr(164)
-intProgressType := -2 ; Status Bar part 2
+IniRead, intDefaultWidth, %A_ScriptDir%\CSVBuddy.ini, global, intDefaultWidth ; used when export to fixed-width format
+IniRead, strTemplateDelimiter, %A_ScriptDir%\CSVBuddy.ini, global, strTemplateDelimiter ; Default ¤ Chr(164), used when export to fixed-width format
+IniRead, intProgressType, %A_ScriptDir%\CSVBuddy.ini, global, intProgressType ; Default -2, Status Bar part 2
+IniRead, strTextEditorExe, %A_ScriptDir%\CSVBuddy.ini, global, strTextEditorExe ; Default notepad.exe
 
 
 ; --------------------- GUI1 --------------------------
 
-Gui, 1:New, +Resize, %strApplicationName%
+Gui, 1:New, +Resize, % L(lAppName)
 
 Gui, 1:Font, s12 w700, Verdana
-Gui, 1:Add, Text, x10, %strApplicationName%
+Gui, 1:Add, Text, x10, % L(lAppName)
 
 Gui, 1:Font, s10 w700, Verdana
-Gui, 1:Add, Tab2, w950 r4 vtabCSVBuddy gChangedTabCSVBuddy
-	, % " 1) Load CSV File     ||     2) Edit Columns     |     3) Save CSV File     |     4) Export     |     About     "
+Gui, 1:Add, Tab2, w950 r4 vtabCSVBuddy gChangedTabCSVBuddy, % L(lTab0List)
 Gui, 1:Font
 
 Gui, 1:Tab, 1
-Gui, 1:Add, Text,		y+10	x10		vlblCSVFileToLoad w85 right, CSV &file to load:
+Gui, 1:Add, Text,		y+10	x10		vlblCSVFileToLoad w85 right, % L(lTab1CSVFileToLoad)
 Gui, 1:Add, Edit,		yp		x100	vstrFileToLoad disabled gChangedFileToLoad
-Gui, 1:Add, Button,		yp		x+5		vbtnHelpFileToLoad gButtonHelpFileToLoad, ?
-Gui, 1:Add, Button,		yp		x+5		vbtnSelectFileToLoad gButtonSelectFileToLoad default, &Select
-Gui, 1:Add, Text,		y+10	x10 	vlblHeader w85 right, CSV file &Header:
+Gui, 1:Add, Button,		yp		x+5		vbtnHelpFileToLoad gButtonHelpFileToLoad, % L(lTab0QuestionMark)
+Gui, 1:Add, Button,		yp		x+5		vbtnSelectFileToLoad gButtonSelectFileToLoad default, % L(lTab1Select)
+Gui, 1:Add, Text,		y+10	x10 	vlblHeader w85 right, % L(lTab1CSVFileHeader)
 Gui, 1:Add, Edit,		yp		x100	vstrFileHeaderEscaped disabled
-Gui, 1:Add, Button,		yp		x+5		vbtnHelpHeader gButtonHelpHeader, ?
-Gui, 1:Add, Button,		yp		x+5		vbtnPreviewFile gButtonPreviewFile hidden, &Preview
-Gui, 1:Add, Radio,		y+10	x100	vradGetHeader gClickRadGetHeader checked, &Get header from file
-Gui, 1:Add, Radio,		yp		x+5		vradSetHeader gClickRadSetHeader, Set header
-Gui, 1:Add, Button,		yp		x+0		vbtnHelpSetHeader gButtonHelpSetHeader, ?
-Gui, 1:Add, Text,		xp		x+27	vlblFieldDelimiter1, Field &delimiter:
+Gui, 1:Add, Button,		yp		x+5		vbtnHelpHeader gButtonHelpHeader, % L(lTab0QuestionMark)
+Gui, 1:Add, Button,		yp		x+5		vbtnPreviewFile gButtonPreviewFile hidden, % L(lTab1Preview)
+Gui, 1:Add, Radio,		y+10	x100	vradGetHeader gClickRadGetHeader checked, % L(lTab1Getheaderfromfile)
+Gui, 1:Add, Radio,		yp		x+5		vradSetHeader gClickRadSetHeader, % L(lTab1Setheader)
+Gui, 1:Add, Button,		yp		x+0		vbtnHelpSetHeader gButtonHelpSetHeader, % L(lTab0QuestionMark)
+Gui, 1:Add, Text,		xp		x+27	vlblFieldDelimiter1, % L(lTab1Fielddelimiter)
 Gui, 1:Add, Edit,		yp		x+5		vstrFieldDelimiter1 gChangedFieldDelimiter1 w20 limit1 center, `, 
-Gui, 1:Add, Button,		yp		x+5		vbtnHelpFieldDelimiter1 gButtonHelpFieldDelimiter1, ?
-Gui, 1:Add, Text,		yp		x+27	vlblFieldEncapsulator1, Field e&ncapsulator:
+Gui, 1:Add, Button,		yp		x+5		vbtnHelpFieldDelimiter1 gButtonHelpFieldDelimiter1, % L(lTab0QuestionMark)
+Gui, 1:Add, Text,		yp		x+27	vlblFieldEncapsulator1, % L(lTab1Fieldencapsulator)
 Gui, 1:Add, Edit,		yp		x+5		vstrFieldEncapsulator1 gChangedFieldEncapsulator1 w20 limit1 center, `"
-Gui, 1:Add, Button,		yp		x+5		vbtnHelpEncapsulator1 gButtonHelpEncapsulator1, ?
-Gui, 1:Add, Checkbox,	yp		x+27	vblnMultiline1 gChangedMultiline1, &Multi-line fields
-Gui, 1:Add, Button,		yp		x+0		vbtnHelpMultiline1 gButtonHelpMultiline1, ?
-Gui, 1:Add, Text,		yp		x+5		vlblEndoflineReplacement1 hidden, EOL replacement:
+Gui, 1:Add, Button,		yp		x+5		vbtnHelpEncapsulator1 gButtonHelpEncapsulator1, % L(lTab0QuestionMark)
+Gui, 1:Add, Checkbox,	yp		x+27	vblnMultiline1 gChangedMultiline1, % L(lTab1Multilinefields)
+Gui, 1:Add, Button,		yp		x+0		vbtnHelpMultiline1 gButtonHelpMultiline1, % L(lTab0QuestionMark)
+Gui, 1:Add, Text,		yp		x+5		vlblEndoflineReplacement1 hidden, % L(lTab1EOLreplacement)
 Gui, 1:Add, Edit,		yp		x+5		vstrEndoflineReplacement1 w30 center hidden
-Gui, 1:Add, Button,		yp		x+5		vbtnLoadFile gButtonLoadFile hidden, &Load
+Gui, 1:Add, Button,		yp		x+5		vbtnLoadFile gButtonLoadFile hidden, % L(lTab1Load)
 
 Gui, 1:Tab, 2
-Gui, 1:Add, Text,		y+10	x10		vlblRenameFields w85 right, Ren&ame fields:
+Gui, 1:Add, Text,		y+10	x10		vlblRenameFields w85 right, % L(lTab2Renamefields)
 Gui, 1:Add, Edit,		yp		x100	vstrRenameEscaped
-Gui, 1:Add, Button,		yp		x+0		vbtnSetRename gButtonSetRename, &Rename
-Gui, 1:Add, Button,		yp		x+5		vbtnHelpRename gButtonHelpRename, ?
-Gui, 1:Add, Text,		y+10	x10		vlblSelectFields w85 right, Selec&t fields:
+Gui, 1:Add, Button,		yp		x+0		vbtnSetRename gButtonSetRename, % L(lTab2Rename)
+Gui, 1:Add, Button,		yp		x+5		vbtnHelpRename gButtonHelpRename, % L(lTab0QuestionMark)
+Gui, 1:Add, Text,		y+10	x10		vlblSelectFields w85 right, % L(lTab2Selectfields)
 Gui, 1:Add, Edit,		yp		x100	vstrSelectEscaped
-Gui, 1:Add, Button,		yp		x+0		vbtnSetSelect gButtonSetSelect, S&elect
-Gui, 1:Add, Button,		yp		x+5		vbtnHelpSelect gButtonHelpSelect, ?
-Gui, 1:Add, Text,		y+10	x10		vlblOrderFields w85 right, Order f&ields:
+Gui, 1:Add, Button,		yp		x+0		vbtnSetSelect gButtonSetSelect, % L(lTab2Select)
+Gui, 1:Add, Button,		yp		x+5		vbtnHelpSelect gButtonHelpSelect, % L(lTab0QuestionMark)
+Gui, 1:Add, Text,		y+10	x10		vlblOrderFields w85 right, % L(lTab2Orderfields)
 Gui, 1:Add, Edit,		yp		x100	vstrOrderEscaped
-Gui, 1:Add, Button,		yp		x+0		vbtnSetOrder gButtonSetOrder, &Order
-Gui, 1:Add, Button,		yp		x+5		vbtnHelpOrder gButtonHelpOrder, ?
+Gui, 1:Add, Button,		yp		x+0		vbtnSetOrder gButtonSetOrder, % L(lTab2Order)
+Gui, 1:Add, Button,		yp		x+5		vbtnHelpOrder gButtonHelpOrder, % L(lTab0QuestionMark)
 
 Gui, 1:Tab, 3
-Gui, 1:Add, Text,		y+10	x10		vlblCSVFileToSave w85 right, CS&V file to save:
+Gui, 1:Add, Text,		y+10	x10		vlblCSVFileToSave w85 right, % L(lTab3CSVfiletosave)
 Gui, 1:Add, Edit,		yp		x100	vstrFileToSave gChangedFileToSave
-Gui, 1:Add, Button,		yp		x+5		vbtnHelpFileToSave gButtonHelpFileToSave, ?
-Gui, 1:Add, Button,		yp		x+5		vbtnSelectFileToSave gButtonSelectFileToSave default, &Select
-Gui, 1:Add, Text,		y+10	x100	vlblFieldDelimiter3, Field delimiter:
+Gui, 1:Add, Button,		yp		x+5		vbtnHelpFileToSave gButtonHelpFileToSave, % L(lTab0QuestionMark)
+Gui, 1:Add, Button,		yp		x+5		vbtnSelectFileToSave gButtonSelectFileToSave default, % L(lTab3Select)
+Gui, 1:Add, Text,		y+10	x100	vlblFieldDelimiter3, % L(lTab3Fielddelimiter)
 Gui, 1:Add, Edit,		yp		x200	vstrFieldDelimiter3 gChangedFieldDelimiter3 w20 limit1 center, `, 
-Gui, 1:Add, Button,		yp		x+5		vbtnHelpFieldDelimiter3 gButtonHelpFieldDelimiter3, ?
-Gui, 1:Add, Text,		y+10	x100	vlblFieldEncapsulator3, Field encaps&ulator:
+Gui, 1:Add, Button,		yp		x+5		vbtnHelpFieldDelimiter3 gButtonHelpFieldDelimiter3, % L(lTab0QuestionMark)
+Gui, 1:Add, Text,		y+10	x100	vlblFieldEncapsulator3, % L(lTab3Fieldencapsulator)
 Gui, 1:Add, Edit,		yp		x200	vstrFieldEncapsulator3 gChangedFieldEncapsulator3 w20 limit1 center, `"
-Gui, 1:Add, Button,		yp		x+5		vbtnHelpEncapsulator3 gButtonHelpEncapsulator3, ?
-Gui, 1:Add, Radio,		y100	x300	vradSaveWithHeader checked, Save &with header
-Gui, 1:Add, Radio,		y+10	x300	vradSaveNoHeader, Save without header
-Gui, 1:Add, Button,		y100	x450	vbtnHelpSaveHeader gButtonHelpSaveHeader, ?
-Gui, 1:Add, Radio,		y100	x500	vradSaveMultiline gClickRadSaveMultiline checked, Save multi-line
-Gui, 1:Add, Radio,		y+10	x500	vradSaveSingleline gClickRadSaveSingleline, Save single-line
-Gui, 1:Add, Button,		y100	x620	vbtnHelpMultiline gButtonHelpSaveMultiline, ?
-Gui, 1:Add, Text,		y+25	x500	vlblEndoflineReplacement3 hidden, End-of-line replacement:
+Gui, 1:Add, Button,		yp		x+5		vbtnHelpEncapsulator3 gButtonHelpEncapsulator3, % L(lTab0QuestionMark)
+Gui, 1:Add, Radio,		y100	x300	vradSaveWithHeader checked, % L(lTab3Savewithheader)
+Gui, 1:Add, Radio,		y+10	x300	vradSaveNoHeader, % L(lTab3Savewithoutheader)
+Gui, 1:Add, Button,		y100	x450	vbtnHelpSaveHeader gButtonHelpSaveHeader, % L(lTab0QuestionMark)
+Gui, 1:Add, Radio,		y100	x500	vradSaveMultiline gClickRadSaveMultiline checked, % L(lTab3Savemultiline)
+Gui, 1:Add, Radio,		y+10	x500	vradSaveSingleline gClickRadSaveSingleline, % L(lTab3Savesingleline)
+Gui, 1:Add, Button,		y100	x620	vbtnHelpMultiline gButtonHelpSaveMultiline, % L(lTab0QuestionMark)
+Gui, 1:Add, Text,		y+25	x500	vlblEndoflineReplacement3 hidden, % L(lTab3Endoflinereplacement)
 Gui, 1:Add, Edit,		yp		x620	vstrEndoflineReplacement3 hidden w50 center, % chr(182)
-Gui, 1:Add, Button,		y105	x+5		vbtnSaveFile gButtonSaveFile hidden, Save
-Gui, 1:Add, Button,		y137	x+5		vbtnCheckFile hidden gButtonCheckFile, Check
+Gui, 1:Add, Button,		y105	x+5		vbtnSaveFile gButtonSaveFile hidden, % L(lTab3Save)
+Gui, 1:Add, Button,		y137	x+5		vbtnCheckFile hidden gButtonCheckFile, % L(lTab3Check)
 
 Gui, 1:Tab, 4
-Gui, 1:Add, Text,		y+10	x10		vlblCSVFileToExport w85 right, Export data to file:
+Gui, 1:Add, Text,		y+10	x10		vlblCSVFileToExport w85 right, % L(lTab4Exportdatatofile)
 Gui, 1:Add, Edit,		yp		x100	vstrFileToExport gChangedFileToExport
-Gui, 1:Add, Button,		yp		x+5		vbtnHelpFileToExport gButtonHelpFileToExport, ?
-Gui, 1:Add, Button,		yp		x+5		vbtnSelectFileToExport gButtonSelectFileToExport default, &Select
-Gui, 1:Add, Text,		y+10	x10		vlblCSVExportFormat w85 right, Export format:
-Gui, 1:Add, Radio,		yp		x100	vradFixed gClickRadFixed, Fixed-width
-Gui, 1:Add, Radio,		yp		x+15	vradHTML gClickRadHTML, HTML
-Gui, 1:Add, Radio,		yp		x+15	vradXML gClickRadXML, XML
-Gui, 1:Add, Radio,		yp		x+15	vradExpress gClickRadExpress, Express
-Gui, 1:Add, Button,		yp		x+15	vbtnHelpExportFormat gButtonHelpExportFormat, ?
+Gui, 1:Add, Button,		yp		x+5		vbtnHelpFileToExport gButtonHelpFileToExport, % L(lTab0QuestionMark)
+Gui, 1:Add, Button,		yp		x+5		vbtnSelectFileToExport gButtonSelectFileToExport default, % L(lTab4Select)
+Gui, 1:Add, Text,		y+10	x10		vlblCSVExportFormat w85 right, % L(lTab4Exportformat)
+Gui, 1:Add, Radio,		yp		x100	vradFixed gClickRadFixed, % L(lTab4Fixedwidth)
+Gui, 1:Add, Radio,		yp		x+15	vradHTML gClickRadHTML, % L(lTab4HTML)
+Gui, 1:Add, Radio,		yp		x+15	vradXML gClickRadXML, % L(lTab4XML)
+Gui, 1:Add, Radio,		yp		x+15	vradExpress gClickRadExpress, % L(lTab4Express)
+Gui, 1:Add, Button,		yp		x+15	vbtnHelpExportFormat gButtonHelpExportFormat, % L(lTab0QuestionMark)
 Gui, 1:Add, Button,		yp		x+15	vbtnHelpExportMulti gButtonHelpExportMulti Hidden
 	, Lorem ipsum dolor sitm ; conserver texte important pour la largeur du bouton
 Gui, 1:Add, Text,		y+10	x10		vlblMultiPurpose w85 right hidden, Hidden Label:
 Gui, 1:Add, Edit,		yp		x100	vstrMultiPurpose gChangedMultiPurpose hidden
 Gui, 1:Add, Button,		yp		x+5		vbtnMultiPurpose gButtonMultiPurpose hidden
 	, Lorem ipsum dolor sitm ; conserver texte important pour la largeur du bouton
-Gui, 1:Add, Button,		y105	x+5		vbtnExportFile gButtonExportFile hidden, Export
-Gui, 1:Add, Button,		y137	x+5		vbtnCheckExportFile gButtonCheckExportFile hidden, Check
+Gui, 1:Add, Button,		y105	x+5		vbtnExportFile gButtonExportFile hidden, % L(lTab4Export)
+Gui, 1:Add, Button,		y137	x+5		vbtnCheckExportFile gButtonCheckExportFile hidden, % L(lTab4Check)
 
 Gui, 1:Tab, 5
 Gui, 1:Font, s10 w700, Verdana
 str32or64 := A_PtrSize  * 8
-Gui, 1:Add, Link,		y+10	x10		vlblAboutText1,
-(Join`s
-<a href="https://bitbucket.org/JnLlnd/csvbuddy">%strApplicationName% %strApplicationVersion%</a>
-(%str32or64%-bits)
-)
+Gui, 1:Add, Link,		y+10	x10		vlblAboutText1, % L(lTab5Abouttext1, lAppName, lAppVersion, str32or64)
 Gui, 1:Font, s9 w500, Arial
-Gui, 1:Add, Link,		y+4	x10		vlblAboutText2,
-(Join`s
-by Jean Lalonde (<a href="http://www.autohotkey.com/board/user/4880-jnllnd/">JnLlnd</a> on AHK forum)
-)
+Gui, 1:Add, Link,		y+4	x10		vlblAboutText2, % L(lTab5Abouttext2)
 Gui, 1:Font
 Gui, 1:Add, Link,		y+4	x10		vlblAboutText3,
-(Join`s
-`nAll rights reserved (c)2013 - DO NOT DISTRIBUTE WITHOUT AUTHOR AUTORIZATION
-`nUsing AHK library: <a href="https://www.github.com/JnLlnd/ObjCSV">ObjCSV v0.3</a>
-`nUsing icon by: <a href="http://www.visualpharm.com">Visual Pharm</a>
-)
-
 
 Gui, 1:Tab
 
@@ -146,7 +131,7 @@ Gui, 1:Add, ListView, 	x10 r24 w200 vlvData -ReadOnly NoSort gListViewEvents Alt
 
 Gui, Add, StatusBar
 SB_SetParts(200)
-SB_SetText("Empty", 1)
+SB_SetText(L(lSBEmpty), 1)
 if (A_IsCompiled)
 	SB_SetIcon(A_ScriptFullPath)
 else
@@ -162,34 +147,33 @@ return
 
 ChangedTabCSVBuddy:
 Gui, 1:Submit, NoHide
-; " 1) Load CSV File     ||     2) Edit Columns     |     3) Save CSV File     |     About     "
-if InStr(tabCSVBuddy, "Load")
+if InStr(tabCSVBuddy, L(lTab0Load))
 	GuiControl, 1:+Default, btnSelectFileToLoad
-else if InStr(tabCSVBuddy, "Edit")
+else if InStr(tabCSVBuddy, L(lTab0Edit))
 	if LV_GetCount("Column")
 		GuiControl, 1:+Default, btnReady
 	else
 	{
-		Oops("First load a CSV file in the first tab.")
+		Oops(lTab0FirstloadaCSVfileinthefi)
 		GuiControl, 1:Choose, tabCSVBuddy, 1
 	}
-else if InStr(tabCSVBuddy, "Save")
+else if InStr(tabCSVBuddy, L(lTab0Save))
 	if LV_GetCount("Column")
 		GuiControl, 1:+Default, btnSelectFileToSave
 	else
 	{
-		Oops("First load a CSV file in the first tab.")
+		Oops(lTab0FirstloadaCSVfileinthefi)
 		GuiControl, 1:Choose, tabCSVBuddy, 1
 	}
-else if InStr(tabCSVBuddy, "Export")
+else if InStr(tabCSVBuddy, L(lTab0Export))
 	if LV_GetCount("Column")
 		GuiControl, 1:+Default, btnSelectFileToExport
 	else
 	{
-		Oops("First load a CSV file in the first tab.")
+		Oops(lTab0FirstloadaCSVfileinthefi)
 		GuiControl, 1:Choose, tabCSVBuddy, 1
 	}
-else if InStr(tabCSVBuddy, "About")
+else if InStr(tabCSVBuddy, L(lTab0About))
 {
 	; do nothing
 }
@@ -204,18 +188,7 @@ return
 
 
 ButtonHelpFileToLoad:
-strHelp =
-(Join`s
-Hit "Select" to choose the CSV file to load.
-
-`n`nClick on the various Help (?) buttons to learn about the options offered by
-%strApplicationName%. When setting are ready, hit "Load" to import the file.
-
-`n`nNote that %strApplicationName% can load CSV files with up to 200 fields.
-Also, although up to 8,191 characters of text can be stored in each cell,
-only the first 260 characters are displayed.
-)
-Help("CSV File To Load", strHelp)
+Help(lTab1HelpFileToLoad, lAppName, lAppName)
 return
 
 
@@ -248,7 +221,7 @@ return
 ButtonSelectFileToLoad:
 Gui, 1:Submit, NoHide
 Gui, 1:+OwnDialogs 
-FileSelectFile, strInputFile, 3, %A_ScriptDir%, Select CSV File to load
+FileSelectFile, strInputFile, 3, %A_ScriptDir%, % L(lTab1SelectCSVFiletoload)
 if !(StrLen(strInputFile))
 	return
 GuiControl, 1:, strFileToLoad, %strInputFile%
@@ -282,19 +255,7 @@ return
 
 
 ButtonHelpHeader:
-strHelp =
-(Join`s
-Most of the time, the first line of a CSV file contains the CSV header, a list of field names separated by a field delimiter.
-If your file contains a CSV Header, select the radio button "Get CSV Header". When you select a file (using the "Select" button),
-the "CSV Header" zone displays the first line of the selected file.
-
-`n`nNote that invisible characters used as delimiters (for example Tab) are displayed with an escape character. For example,
-Tabs are shown as "``t".
-
-`n`nIf the file does not contain a CSV header, select the radio button "Set CSV Header" and enter in the "CSV Header" zone the
-field names for each column of data in the file, seperated by the field delimiter.
-)
-Help("CSV Header", strHelp)
+Help(lTab1HelpHeader)
 return
 
 
@@ -303,10 +264,10 @@ ButtonPreviewFile:
 Gui, 1:Submit, NoHide
 if !StrLen(strFileToLoad)
 {
-	Oops("First use the ""Select"" button to choose the CSV file you want to load.")
+	Oops(lTab1FirstusetheSelectbutton)
 	return
 }
-run, notepad.exe %strFileToLoad%
+run, %strTextEditorExe% "%strFileToLoad%"
 return
 
 
@@ -316,27 +277,21 @@ Gui, 1:Submit, NoHide
 FileReadLine, strCurrentHeader, %strFileToLoad%, 1
 GuiControl, 1:, strFileHeaderEscaped, % StrEscape(strCurrentHeader)
 GuiControl, 1:Disable, strFileHeaderEscaped
-GuiControl, 1:, lblHeader, File CSV &Header:
+GuiControl, 1:, lblHeader, % L(lTab1FileCSVHeader)
 return
 
 
 
 ClickRadSetHeader:
 GuiControl, 1:Enable, strFileHeaderEscaped
-GuiControl, 1:, lblHeader, Custom &Header:
+GuiControl, 1:, lblHeader, % L(lTab1CustomHeader)
 GuiControl, 1:Focus, strFileHeaderEscaped
 return
 
 
 
 ButtonHelpSetHeader:
-Gui, 1:Submit, NoHide
-strHelp =
-(Join`s
-If the first line of the CSV file contains the list of field names, click "Get header from CSV file".
-If not, click "Set CSV header" and enter the list of field names separated by the "Field delimiter".
-)
-Help("CSV Get/Set CSV Header", strHelp)
+Help(lTab1HelpSetHeader)
 return
 
 
@@ -347,25 +302,7 @@ return
 
 
 ButtonHelpFieldDelimiter1:
-strHelp =
-(Join`s
-Each field in the CSV header and in data rows of the file must be separated by a field delimiter.
-This is often comma ( , ), semicolon ( `; ) or Tab.
-
-`n`n%strApplicationName% will detect the delimiter if one of these characters is found in the first line
-of the file: tab, semi-colon, comma, colon, pipe or tilde. If this is not the correct delimiter, enter
-any single character or one of these replacement letters for invisible characters:
-
-`n`nt`tTab (HT)
-`nn`tLinefeed (LF)
-`nr`tCarriage return (CR)
-`nf`tForm feed (FF)
-
-`n`nSpace can also be used as delimiter. Just enter a space in the text zone.
-
-`n`nTip: Use the "Preview" button to find what is the field delimiter in the selected file.
-)
-Help("Field Delimiter", strHelp)
+Help(lTab1HelpDelimiter1, lAppName)
 return
 
 
@@ -376,21 +313,7 @@ return
 
 
 ButtonHelpEncapsulator1:
-strHelp =
-(Join`s
-When data fields in a CSV file contain characters used as delimiter or end-of-line, they must be enclosed in a field encapsulator.
-This encapsulator is often double-quotes ( "..." ) or single quotes ( '...' ). For example, if comma is used as field delimiter
-in a CSV file, the data field "Smith, John" must be encapsulated because it contains a comma.
-
-`n`nIf a field contains the character used as encapsulator, this character must be doubled. For example, the data "John "Junior" Smith"
-must be stated as "John ""Junior"" Smith".
-
-`n`n%strApplicationName% will detect the encapsulator if one of these characters is found in the first line of the file:
-double-quote, single-quote, tilde or pipe. If this is not the correct encapsulator, enter any single character.
-
-`n`nTip: Use the "Preview" button to find what is the field encapsulator in the selected file.
-)
-Help("Field Encapsulator", strHelp)
+Help(lTab1HelpEncapsulator1, lAppName)
 return
 
 
@@ -412,18 +335,7 @@ return
 
 
 ButtonHelpMultiline1:
-strHelp =
-(Join`s
-Most CSV files do not contain line breaks inside text field. But some do. For example, you can find multi-lines "Notes" fields in
-Google or Outlook contacts exported files.
-
-`n`nIf text fields in your CSV file contain line breaks, select this checkbox to turn this option ON.
-If not, keep it OFF since this will improve loading performance.
-
-`n`nIf you turn Multi-line ON, you have the additional option to choose a character (or string) that will be converted to
-line-breaks if found in the CSV file.
-)
-Help("Multi-line Fields", strHelp)
+Help(lTab1HelpMultiline1)
 return
 
 
@@ -434,34 +346,29 @@ if !DelimitersOK(1)
 	return
 if !StrLen(strFileToLoad)
 {
-	Oops("First use the ""Select"" button to choose the CSV file you want to load.")
+	Oops(lTab1FirstusetheSelectbutton)
 	return
 }
 if !StrLen(strFileHeaderEscaped) and (radSetHeader)
 {
-	MsgBox, 52, %strApplicationName%, CSV Header is not specified. "C" + numbers will be used as field names. Do you want to continue?
+	MsgBox, 52, % L(lAppName), % L(lTab1CSVHeaderisnotspecified)
 	IfMsgBox, No
 		return
 }
 if LV_GetCount("Column")
 {
-	MsgBox, 36, %strApplicationName%, Replace the current content of the list?
+	MsgBox, 36, % L(lAppName), % L(lTab1Replacethecurrentcontentof)
 	IfMsgBox, Yes
 	{
 		LV_Delete() ; delete all rows - better performance on large files when we delete rows before columns
 		loop, % LV_GetCount("Column")
 			LV_DeleteCol(1) ; delete all columns
-		SB_SetText("Empty", 1)
+		SB_SetText(L(lSBEmpty), 1)
 		intActualSize := 0
 	}
 	IfMsgBox, No
 	{
-		MsgBox, 36, %strApplicationName%,
-			(
-			If the CSV file you want to load have the same fields, in the same order, you can add file data to the current list.
-			
-			Do you want to add to the content of this file to the list?
-			)
+		MsgBox, 36, %lAppName%, % L(lTab1DoYouWantToAdd)
 		IfMsgBox, No
 			return
 	}
@@ -477,50 +384,35 @@ intActualSize := intActualSize + intFileSize
 ; ObjCSV_CSV2Collection(strFilePath, ByRef strFieldNames [, blnHeader = 1, blnMultiline = 1, intProgressType = 0
 ;	, strFieldDelimiter = ",", strEncapsulator = """", strEolReplacement = "", strProgressText := ""])
 obj := ObjCSV_CSV2Collection(strFileToLoad, strCurrentHeader, radGetHeader, blnMultiline1, intProgressType
-	, strCurrentFieldDelimiter, strCurrentFieldEncapsulator, strEndoflineReplacement1, "Reading CSV data... (##%)")
+	, strCurrentFieldDelimiter, strCurrentFieldEncapsulator, strEndoflineReplacement1, L(lTab1ReadingCSVdata))
 if (ErrorLevel)
 {
 	if (ErrorLevel = 3)
-		strError := "CSV file not loaded.`n`nCould not find an unused end-of-line replacement character in this file."
+		strError := L(lTab1CSVfilenotloadedNoUnusedRepl)
 	else
 	{
-		strError := "CSV file not loaded.`n`nFile probably too large (" . intActualSize . " K)."
+		strError := L(lTab1CSVfilenotloadedTooLarge, intActualSize)
 		if (A_PtrSize = 4) ; 32-bits
-			strError := strError . " Try the 64-bits version for increased capacity."
+			strError := strError . L(lTab1Trythe64bitsversion)
 	}
 	Oops(strError)
-	SB_SetText("Empty", 1)
+	SB_SetText(lSBEmpty, 1)
 	return
 }
 SB_SetText("", 2)
 ; ObjCSV_Collection2ListView(objCollection [, strGuiID = "", strListViewID = "", strFieldOrder = "", strFieldDelimiter = ","
 ;	, strEncapsulator = """", strSortFields = "", strSortOptions = "", intProgressType = 0, strProgressText = ""])
 ObjCSV_Collection2ListView(obj, "1", "lvData", strCurrentHeader, strCurrentFieldDelimiter
-	, strCurrentFieldEncapsulator, , , intProgressType, "Loading data to list... (##%)")
+	, strCurrentFieldEncapsulator, , , intProgressType, L(lTab1Loadingdatatolist)"Loading data to list... (##%)")
 if (ErrorLevel)
 {
-	Oops("CSV file not loaded.`n`nNote that " . strApplicationName . " support files with a maximum of 200 fields.")
-	SB_SetText("Empty", 1)
+	Oops(L(lTab1CSVfilenotloadedMax200fields))
+	SB_SetText(lSBEmpty, 1)
 	return
 }
-SB_SetText(LV_GetCount() . " records (" . intActualSize . " K)", 1)
+SB_SetText(L(lSBRecordsSize, LV_GetCount(), intActualSize), 1)
 Gosub, UpdateCurrentHeader
-strHelp =
-(Join`s
-Your CSV file is loaded.
-
-`n`nYou can sort rows by clicking on column headers. Choose sorting type: alphabetical, numeric integer or numeric float,
-ascending or descending.
-
-`n`nDouble-click on a row to edit a record.  Right-click anywhere in the list view to select all rows, deselect all rows
-or reverse selection.
-
-`n`nYou can use the "2) Edit Columns" tab to edit field names, select fields to keep or change fields order.
-
-`n`nWhen you will be ready, go to the "3) Save CSV File" tab to save all or selected rows in a new CSV file or
-to the "4) Export" tab to export your data to fixed-width, HTML or XML format.
-)
-Help("Ready to edit", strHelp)
+Help(lTab1HelpReadyToEdit)
 GuiControl, 1:, strFieldDelimiter3, %strCurrentVisibleFieldDelimiter%
 GuiControl, 1:, strFieldEncapsulator3, %strCurrentFieldEncapsulator%
 obj := ; release object
@@ -529,7 +421,7 @@ return
 
 
 ; --------------------- TAB 2 --------------------------
-
+;####
 ButtonSetRename:
 Gui, 1:Submit, NoHide
 if !LV_GetCount()
@@ -543,7 +435,7 @@ intNbFieldNames := objNewHeader.MaxIndex()
 intNbColumns := LV_GetCount("Column")
 if !StrLen(strRenameEscaped)
 {
-	MsgBox, 52, %strApplicationName%,
+	MsgBox, 52, %lAppName%,
 	(
 	In "Rename fields:", enter the list of field names separated by the field delimiter ( %strCurrentVisibleFieldDelimiter% ).
 	
@@ -556,7 +448,7 @@ if !StrLen(strRenameEscaped)
 }
 else if (intNbFieldNames < intNbColumns)
 {
-	MsgBox, 52, %strApplicationName%,
+	MsgBox, 52, %lAppName%,
 	(
 	There are less field names in the "Rename fields:" zone (%intNbFieldNames% fields) than the number of columns in the list (%intNbColumns% fields).
 
@@ -957,7 +849,7 @@ return
 
 ButtonCheckFile:
 Gui, 1:Submit, NoHide
-run, notepad.exe %strFileToSave%
+run, %strTextEditorExe% "%strFileToSave%"
 return
 
 
@@ -1260,7 +1152,7 @@ Gui, 1:Submit, NoHide
 Gui, 1:+OwnDialogs 
 if (radFixed)
 {
-	InputBox, intNewDefaultWidth, %strApplicationName% (%strApplicationVersion%) - Default fixed-width
+	InputBox, intNewDefaultWidth, %lAppName% (%lAppVersion%) - Default fixed-width
 		, Enter the new default width:, , , 120, , , , , %intDefaultWidth%
 	if !ErrorLevel
 		if (intNewDefaultWidth > 0)
@@ -1330,9 +1222,9 @@ return
 ButtonCheckExportFile:
 Gui, 1:Submit, NoHide
 if InStr(strFileToExport, ".htm")
-	run, %strFileToExport%
+	run, "%strFileToExport%"
 else
-	run, notepad.exe %strFileToExport%
+	run, %strTextEditorExe% "%strFileToExport%"
 return
 
 
@@ -1359,7 +1251,7 @@ if (A_GuiEvent = "DoubleClick")
 	intRowNumber := A_EventInfo
 	Gui, 1:Submit, NoHide
 	intGui1WinID := WinExist("A")
-	Gui, 2:New, +Resize , %strApplicationName% - Edit row
+	Gui, 2:New, +Resize , %lAppName% - Edit row
 	Gui, 2:+Owner1
 	Gui, 1:Default
 	SysGet, intMonWork, MonitorWorkArea 
@@ -1599,7 +1491,7 @@ return
 CheckOneRow:
 if (LV_GetCount("Selected") = 1)
 {
-	MsgBox, 35, %strApplicationName% - One record selected,
+	MsgBox, 35, %lAppName% - One record selected,
 	(
 	Only one record is selected. Do you want to save only this record?
 	
@@ -1800,22 +1692,6 @@ StrMakeEncodedFieldDelimiter(strConverted)
 
 
 
-Help(strTitle, strMessage)
-{
-	Gui, 1:+OwnDialogs 
-	MsgBox, 0, %strApplicationName% (%strApplicationVersion%) - %strTitle% Help, %strMessage%
-}
-
-
-
-Oops(strMessage)
-{
-	Gui, 1:+OwnDialogs 
-	MsgBox, 48, %strApplicationName% (%strApplicationVersion%), %strMessage%
-}
-
-
-
 ShrinkEditControl(strEditHandle, intMaxRows, strGuiName)
 {
 	EM_GETLINECOUNT = 0xBA
@@ -1844,7 +1720,7 @@ CheckIfFileExistOverwrite(strFileName)
 		return True
 	else
 	{
-		MsgBox, 35, %strApplicationName% - File exists, 
+		MsgBox, 35, %lAppName% - File exists, 
 		(
 		File exists:`n%strFileName%
 		
@@ -1945,4 +1821,34 @@ PositionInArray(strChecked, objArray)
 }
 
 
+
+Help(strMessage, objVariables*)
+{
+	Gui, 1:+OwnDialogs 
+	StringLeft, strTitle, strMessage, % InStr(strMessage, "$") - 1
+	StringReplace, strMessage, strMessage, %strTitle%$
+	MsgBox, 0, % L("~1~ (~2~) - ~3~ Help", lAppName, lAppVersion, strTitle), % L(strMessage, objVariables*)
+}
+
+
+
+Oops(strMessage, objVariables*)
+{
+	Gui, 1:+OwnDialogs
+	MsgBox, 48, %lAppName% (%lAppVersion%), % L(strMessage, objVariables*)
+}
+
+
+
+L(strMessage, objVariables*)
+{
+	Loop
+	{
+		if InStr(strMessage, "~" . A_Index . "~")
+			StringReplace, strMessage, strMessage, ~%A_Index%~, % objVariables[A_Index]
+ 		else
+			break
+	}
+	return strMessage
+}
 
