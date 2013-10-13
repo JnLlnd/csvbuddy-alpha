@@ -711,7 +711,8 @@ if !DelimitersOK(3)
 blnOverwrite := CheckIfFileExistOverwrite(strFileToSave)
 if (blnOverwrite < 0)
 	return
-gosub, CheckOneRow
+if !CheckOneRow()
+	return
 ; ObjCSV_ListView2Collection([strGuiID = "", strListViewID = "", strFieldOrder = "", strFieldDelimiter = ","
 ;	, strEncapsulator = """", intProgressType = 0, strProgressText = ""])
 obj := ObjCSV_ListView2Collection("1", "lvData", , , , intProgressType, L(lTab0ReadingFromList))
@@ -725,7 +726,7 @@ strRealFieldDelimiter3 := StrMakeRealFieldDelimiter(strFieldDelimiter3)
 ;	, strFieldDelimiter = ",", strEncapsulator = """", strEolReplacement = "", strProgressText = ""])
 ObjCSV_Collection2CSV(obj, strFileToSave, radSaveWithHeader
 	, GetListViewHeader(strRealFieldDelimiter3, strFieldEncapsulator3), intProgressType, blnOverwrite
-	, strRealFieldDelimiter3, strFieldEncapsulator3, strEolReplacement, "Saving data to CSV file... (##%)")
+	, strRealFieldDelimiter3, strFieldEncapsulator3, strEolReplacement, L(lTab3SavingCSV))
 if FileExist(strFileToSave)
 {
 	GuiControl, 1:Show, btnCheckFile
@@ -936,7 +937,8 @@ else
 	blnOverwrite := true
 if (blnOverwrite < 0)
 	return
-gosub, CheckOneRow
+if !CheckOneRow()
+	return
 if (radFixed)
 	if StrLen(strMultiPurpose)
 		Gosub, ExportFixed
@@ -980,20 +982,20 @@ return
 
 
 
-; ####--------------------- LISTVIEW EVENTS --------------------------
+; --------------------- LISTVIEW EVENTS --------------------------
 
 
 ListViewEvents:
 if (A_GuiEvent = "ColClick")
 {
 	intColNumber := A_EventInfo
-	Menu, SortMenu, Add, &Sort alphabetical, MenuSortText
-	Menu, SortMenu, Add, Sort &numeric (integer), MenuSortInteger
-	Menu, SortMenu, Add, Sort numeric (&float), MenuSortFloat
+	Menu, SortMenu, Add, % L(lLVeventsSortalphabetical), MenuSortText
+	Menu, SortMenu, Add, % L(lLVeventsSortnumericInteger), MenuSortInteger
+	Menu, SortMenu, Add, % L(lLVeventsSortnumericFloat), MenuSortFloat
 	Menu, SortMenu, Add
-	Menu, SortMenu, Add, Sort descending &alphabetical, MenuSortDescText
-	Menu, SortMenu, Add, Sort &descending numeric (integer), MenuSortDescInteger
-	Menu, SortMenu, Add, Sort descending numeric (f&loat), MenuSortDescFloat
+	Menu, SortMenu, Add, % L(lLVeventsSortdescendingalphabetical), MenuSortDescText
+	Menu, SortMenu, Add, % L(lLVeventsSortdescendingnumericInteger), MenuSortDescInteger
+	Menu, SortMenu, Add, % L(lLVeventsSortdescendingnumericFloat), MenuSortDescFloat
 	Menu, SortMenu, Show
 }
 if (A_GuiEvent = "DoubleClick")
@@ -1001,7 +1003,7 @@ if (A_GuiEvent = "DoubleClick")
 	intRowNumber := A_EventInfo
 	Gui, 1:Submit, NoHide
 	intGui1WinID := WinExist("A")
-	Gui, 2:New, +Resize , %lAppName% - Edit row
+	Gui, 2:New, +Resize , % L(lLVeventsEditrow, lAppName)
 	Gui, 2:+Owner1
 	Gui, 1:Default
 	SysGet, intMonWork, MonitorWorkArea 
@@ -1017,13 +1019,13 @@ if (A_GuiEvent = "DoubleClick")
 		{
 			if (intCol = 1)
 			{
-				Gui, 2:Add, Button, y%intY% x10 vbtnSaveRecord gButtonSaveRecord, Save
-				Gui, 2:Add, Button, yp x+5 vbtnCancel gButtonCancel, Cancel
+				Gui, 2:Add, Button, y%intY% x10 vbtnSaveRecord gButtonSaveRecord, % L(lLVeventsSave)
+				Gui, 2:Add, Button, yp x+5 vbtnCancel gButtonCancel, % L(lLVeventsCancel)
 			}
 			if (intCol = intMaxNbCol)
 			{
 				intYLabel := intY
-				Gui, 2:Add, Text, y%intYLabel% x%intX% vstrLabelMissing, *** FIELDS MISSING ***
+				Gui, 2:Add, Text, y%intYLabel% x%intX% vstrLabelMissing, % L(lLVeventsFieldsMissing)
 				break
 			}
 			intCol := intCol + 1
@@ -1043,13 +1045,13 @@ if (A_GuiEvent = "DoubleClick")
 	}
 	if (intCol = 1)
 	{
-		Gui, 2:Add, Button, y%intY% x10 vbtnSaveRecord gButtonSaveRecord, Save
-		Gui, 2:Add, Button, yp x+5 vbtnCancel gButtonCancel, Cancel
+		Gui, 2:Add, Button, y%intY% x10 vbtnSaveRecord gButtonSaveRecord, % L(lLVeventsSave)
+		Gui, 2:Add, Button, yp x+5 vbtnCancel gButtonCancel, % L(lLVeventsCancel)
 	}
 	Gui, 2:Show, AutoSize Center
 	Gui, 1:+Disabled
 }
-SB_SetText(LV_GetCount("Selected") . " records selected", 2)
+SB_SetText(L(lLVeventsrecordsselected, LV_GetCount("Selected")), 2)
 return
 
 
@@ -1074,9 +1076,9 @@ return
 GuiContextMenu:  ; Launched in response to a right-click or press of the Apps key.
 if A_GuiControl <> lvData  ; This check is optional. It displays the menu only for clicks inside the ListView.
     return
-Menu, SelectMenu, Add, Select &All, MenuSelectAll
-Menu, SelectMenu, Add, D&eselect All, MenuSelectNone
-Menu, SelectMenu, Add, &Reverse Selection, MenuSelectReverse
+Menu, SelectMenu, Add, % L(lLVeventsSelectAll), MenuSelectAll
+Menu, SelectMenu, Add, % L(lLVeventsDeselectAll), MenuSelectNone
+Menu, SelectMenu, Add, % L(lLVeventsReverseSelection), MenuSelectReverse
 ; Show the menu at the provided coordinates, A_GuiX and A_GuiY.  These should be used
 ; because they provide correct coordinates even if the user pressed the Apps key:
 Menu, SelectMenu, Show, %A_GuiX%, %A_GuiY%
@@ -1178,8 +1180,6 @@ ExitApp
 
 
 ButtonSaveRecord:
-if (intRowNumber < 1)
-	###_D("Pas normal! intRowNumber: " . intRowNumber)
 Gui, 2:Submit
 Gui, 1:Default
 loop, % LV_GetCount("Column")
@@ -1241,25 +1241,6 @@ return
 
 
 
-CheckOneRow:
-if (LV_GetCount("Selected") = 1)
-{
-	MsgBox, 35, %lAppName% - One record selected,
-	(
-	Only one record is selected. Do you want to save only this record?
-	
-	Yes: Only one record will be saved.
-	No: All records will be saved.
-	)
-	IfMsgBox, No
-		LV_Modify(0, "Select") ; select all records
-	IfMsgBox, Cancel
-		return
-}
-return
-
-
-
 ExportFixed:
 if !DelimitersOK(3)
 	return
@@ -1279,11 +1260,11 @@ loop, % objFieldsArray.MaxIndex() / 2
 	strFormat4Csv := ObjCSV_Format4CSV(strThisName, strRealFieldDelimiter3, strFieldEncapsulator3)
 	strFieldsName := strFieldsName . strFormat4Csv . strRealFieldDelimiter3
 	intThisWidth := objFieldsArray[(A_Index * 2)]
-	if intThisWidth  is integer
+	if intThisWidth is integer
 		strFieldsWidth := strFieldsWidth . intThisWidth . strRealFieldDelimiter3
 	else
 	{
-		Oops("""" . intThisWidth . """ in field #" . A_Index . " """ . strThisName . """ must be an integer number.")
+		Oops(lExportFixedMustBeInteger, intThisWidth, A_Index, strThisName)
 		return
 	}
 }
@@ -1296,7 +1277,7 @@ else
 ; ObjCSV_Collection2Fixed(objCollection, strFilePath, strWidth [, blnHeader = 0, strFieldOrder = "", intProgressType = 0, blnOverwrite = 0
 ;	, strFieldDelimiter = ",", strEncapsulator = """", strEolReplacement = "", strProgressText = ""])
 ObjCSV_Collection2Fixed(obj, strFileToExport, strFieldsWidth, radSaveWithHeader, strFieldsName, intProgressType, blnOverwrite
-	, strRealFieldDelimiter3, strFieldEncapsulator3, strEolReplacement, "Saving data to export file... (##%)")
+	, strRealFieldDelimiter3, strFieldEncapsulator3, strEolReplacement, L(lExportSaving))
 if FileExist(strFileToExport)
 {
 	GuiControl, 1:Show, btnCheckExportFile
@@ -1315,9 +1296,9 @@ obj := ObjCSV_ListView2Collection("1", "lvData", , , , intProgressType, L(lTab0R
 ; ObjCSV_Collection2HTML(objCollection, strFilePath, strTemplateFile [, strTemplateEncapsulator = ~
 ;	, intProgressType = 0, blnOverwrite = 0, strProgressText = ""])
 ObjCSV_Collection2HTML(obj, strFileToExport, strMultiPurpose, strTemplateDelimiter
-	, intProgressType, blnOverwrite, "Saving data to export file... (##%)")
+	, intProgressType, blnOverwrite, L(lExportSaving))
 if (ErrorLevel)
-	Oops("Data not saved. An unknown error occured.")
+	Oops(lExportHTMLUnknownerror)
 if FileExist(strFileToExport)
 {
 	GuiControl, 1:Show, btnCheckExportFile
@@ -1334,9 +1315,9 @@ ExportXML:
 ;	, strEncapsulator = """", intProgressType = 0, strProgressText = ""])
 obj := ObjCSV_ListView2Collection("1", "lvData", , , , intProgressType, L(lTab0ReadingFromList))
 ; ObjCSV_Collection2XML(objCollection, strFilePath [, intProgressType = 0, blnOverwrite = 0, strProgressText = ""])
-ObjCSV_Collection2XML(obj, strFileToExport, intProgressType, blnOverwrite, "Saving data to export file... (##%)")
+ObjCSV_Collection2XML(obj, strFileToExport, intProgressType, blnOverwrite, L(lExportSaving))
 if (ErrorLevel)
-	Oops("Data not saved. An unknown error occured.")
+	Oops(lExportUnknownerror)
 if FileExist(strFileToExport)
 {
 	GuiControl, 1:Show, btnCheckExportFile
@@ -1363,7 +1344,7 @@ if FileExist(strExpressTemplateTempFile)
 	; ObjCSV_Collection2HTML(objCollection, strFilePath, strTemplateFile [, strTemplateEncapsulator = ~
 	;	, intProgressType = 0, blnOverwrite = 0, strProgressText = ""])
 	ObjCSV_Collection2HTML(obj, strFileToExport, strExpressTemplateTempFile, strTemplateDelimiter
-		, intProgressType, blnOverwrite, "Saving data to export file... (##%)")
+		, intProgressType, blnOverwrite, L(lExportSaving))
 	FileDelete, %strExpressTemplateTempFile%
 	if FileExist(strFileToExport)
 	{
@@ -1373,14 +1354,32 @@ if FileExist(strExpressTemplateTempFile)
 	}
 }
 else
-	Oops("An error occured while creating a temporary template file.")
+	Oops(lExportErrorTempFile)
 obj := ; release object
 return
 
 
 
 
-; --------------------- FUNCTIONS --------------------------
+; ####--------------------- FUNCTIONS --------------------------
+
+
+CheckOneRow()
+{
+	if (LV_GetCount("Selected") = 1)
+	{
+		MsgBox, 35, % L(lLVeventsOnerecordselectedTitle, lAppName), % L(lLVeventsOnerecordselectedMessage)
+		IfMsgBox, No
+		{
+			GuiControl, Focus, lvData
+			LV_Modify(0, "-Select")
+		}
+		IfMsgBox, Cancel
+			return False
+	}
+	return True
+}
+
 
 
 GetListViewHeader(strRealFieldDelimiter, strFieldEncapsulator)
