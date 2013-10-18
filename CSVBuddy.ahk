@@ -9,7 +9,6 @@ This script uses the library ObjCSV v0.3 (https://github.com/JnLlnd/ObjCSV)
 
 #NoEnv
 #SingleInstance force
-#LTrim ; omits spaces and tabs at the beginning of each line in continuation sections
 #Include %A_ScriptDir%\..\ObjCSV\lib\ObjCSV.ahk
 #Include %A_ScriptDir%\CSVBuddy_LANG.ahk
 
@@ -17,11 +16,19 @@ This script uses the library ObjCSV v0.3 (https://github.com/JnLlnd/ObjCSV)
 ; (see http://auto-hotkey.com/boards/viewtopic.php?f=5&t=115&sid=4e0b3f9f47921441b3b8689138a489b7#p844)
 ; Tested file size capacity: safe at 100 MB on 32-bits, no limit on 64-bits
 
+; --------------------- COMPILER DIRECTIVES --------------------------
+
+;@Ahk2Exe-SetName CSV Buddy
+;@Ahk2Exe-SetDescription Load`, edit`, save and export CSV files
+;@Ahk2Exe-SetVersion 0.2.7
+;@Ahk2Exe-SetCopyright Jean Lalonde
+;@Ahk2Exe-SetOrigFilename CSVBuddy.exe
+
 
 ; --------------------- GLOBAL AND DEFAULT VALUES --------------------------
 
 IniRead, intDefaultWidth, %A_ScriptDir%\CSVBuddy.ini, global, intDefaultWidth ; used when export to fixed-width format
-IniRead, strTemplateDelimiter, %A_ScriptDir%\CSVBuddy.ini, global, strTemplateDelimiter ; Default ¤ Chr(164), used when export to fixed-width format
+IniRead, strTemplateDelimiter, %A_ScriptDir%\CSVBuddy.ini, global, strTemplateDelimiter ; Default ~ (tilde), used when export to HTML and Express formats
 IniRead, intProgressType, %A_ScriptDir%\CSVBuddy.ini, global, intProgressType ; Default -2, Status Bar part 2
 IniRead, strTextEditorExe, %A_ScriptDir%\CSVBuddy.ini, global, strTextEditorExe ; Default notepad.exe
 IniRead, blnSkipHelpReadyToEdit, %A_ScriptDir%\CSVBuddy.ini, global, blnSkipHelpReadyToEdit ; Default 0
@@ -51,10 +58,10 @@ Gui, 1:Add, Radio,		y+10	x100	vradGetHeader gClickRadGetHeader checked, % L(lTab
 Gui, 1:Add, Radio,		yp		x+5		vradSetHeader gClickRadSetHeader, % L(lTab1Setheader)
 Gui, 1:Add, Button,		yp		x+0		vbtnHelpSetHeader gButtonHelpSetHeader, % L(lTab0QuestionMark)
 Gui, 1:Add, Text,		xp		x+27	vlblFieldDelimiter1, % L(lTab1Fielddelimiter)
-Gui, 1:Add, Edit,		yp		x+5		vstrFieldDelimiter1 gChangedFieldDelimiter1 w20 limit1 center, `, 
+Gui, 1:Add, Edit,		yp		x+5		vstrFieldDelimiter1 w20 limit1 center, `, ; gChangedFieldDelimiter1 unused
 Gui, 1:Add, Button,		yp		x+5		vbtnHelpFieldDelimiter1 gButtonHelpFieldDelimiter1, % L(lTab0QuestionMark)
 Gui, 1:Add, Text,		yp		x+27	vlblFieldEncapsulator1, % L(lTab1Fieldencapsulator)
-Gui, 1:Add, Edit,		yp		x+5		vstrFieldEncapsulator1 gChangedFieldEncapsulator1 w20 limit1 center, `"
+Gui, 1:Add, Edit,		yp		x+5		vstrFieldEncapsulator1 w20 limit1 center, `" ; gChangedFieldEncapsulator1  unused
 Gui, 1:Add, Button,		yp		x+5		vbtnHelpEncapsulator1 gButtonHelpEncapsulator1, % L(lTab0QuestionMark)
 Gui, 1:Add, Checkbox,	yp		x+27	vblnMultiline1 gChangedMultiline1, % L(lTab1Multilinefields)
 Gui, 1:Add, Button,		yp		x+0		vbtnHelpMultiline1 gButtonHelpMultiline1, % L(lTab0QuestionMark)
@@ -112,7 +119,7 @@ Gui, 1:Add, Button,		yp		x+15	vbtnHelpExportFormat gButtonHelpExportFormat, % L(
 Gui, 1:Add, Button,		yp		x+15	vbtnHelpExportMulti gButtonHelpExportMulti Hidden
 	, Lorem ipsum dolor sitm ; conserver texte important pour la largeur du bouton
 Gui, 1:Add, Text,		y+10	x10		vlblMultiPurpose w85 right hidden, Hidden Label:
-Gui, 1:Add, Edit,		yp		x100	vstrMultiPurpose gChangedMultiPurpose hidden
+Gui, 1:Add, Edit,		yp		x100	vstrMultiPurpose hidden ; gChangedMultiPurpose unused
 Gui, 1:Add, Button,		yp		x+5		vbtnMultiPurpose gButtonMultiPurpose hidden
 	, Lorem ipsum dolor sitm ; conserver texte important pour la largeur du bouton
 Gui, 1:Add, Button,		y105	x+5		vbtnExportFile gButtonExportFile hidden, % L(lTab4Export)
@@ -179,8 +186,6 @@ else if InStr(tabCSVBuddy, L(lTab0About))
 {
 	; do nothing
 }
-else
-	###_D(tabCSVBuddy . " !?!")
 return
 
 
@@ -264,11 +269,6 @@ return
 
 ButtonPreviewFile:
 Gui, 1:Submit, NoHide
-if !StrLen(strFileToLoad)
-{
-	Oops(lTab1FirstusetheSelectbutton)
-	return
-}
 run, %strTextEditorExe% "%strFileToLoad%"
 return
 
@@ -298,8 +298,10 @@ return
 
 
 
+/*
 ChangedFieldDelimiter1:
 return
+*/
 
 
 
@@ -309,8 +311,10 @@ return
 
 
 
+/*
 ChangedFieldEncapsulator1:
 return
+*/
 
 
 
@@ -432,6 +436,7 @@ Gui, 1:Submit, NoHide
 if !LV_GetCount()
 {
 	Oops(lTab0FirstloadaCSVfile)
+	GuiControl, 1:Choose, tabCSVBuddy, 1
 	return
 }
 ; ObjCSV_ReturnDSVObjectArray(strCurrentDSVLine, strDelimiter = ",", strEncapsulator = """")
@@ -476,6 +481,7 @@ Gui, 1:Submit, NoHide
 if !LV_GetCount()
 {
 	Oops(lTab0FirstloadaCSVfile)
+	GuiControl, 1:Choose, tabCSVBuddy, 1
 	return
 }
 if !StrLen(strSelectEscaped)
@@ -539,7 +545,7 @@ return
 
 ButtonSetOrder:
 Gui, 1:Submit, NoHide
-if !StrLen(strSelectEscaped)
+if !StrLen(strOrderEscaped)
 {
 	Oops(lTab2OrderNoString, strCurrentVisibleFieldDelimiter)
 	return
@@ -547,6 +553,7 @@ if !StrLen(strSelectEscaped)
 if !LV_GetCount()
 {
 	Oops(lTab0FirstloadaCSVfile)
+	GuiControl, 1:Choose, tabCSVBuddy, 1
 	return
 }
 ; ObjCSV_ReturnDSVObjectArray(strCurrentDSVLine, strDelimiter = ",", strEncapsulator = """")
@@ -809,7 +816,7 @@ Loop, % objCurrentHeader.MaxIndex()
 	; ObjCSV_Format4CSV(strF4C [, strFieldDelimiter = ",", strEncapsulator = """"])
 	strFormat4Csv := ObjCSV_Format4CSV(objCurrentHeader[A_Index], strRealFieldDelimiter3, strFieldEncapsulator3)
 	strMultiPurpose := strMultiPurpose . strFormat4Csv . strRealFieldDelimiter3 . intDefaultWidth . strRealFieldDelimiter3
-	; strFieldDelimiter3 et strFieldEncapsulator3 pour l'écriture
+	; strFieldDelimiter3 et strFieldEncapsulator3 pour l'ecriture
 }
 StringTrimRight, strMultiPurpose, strMultiPurpose, 1 ; remove extra delimiter
 GuiControl, 1:, strMultiPurpose, % StrEscape(strMultiPurpose)
@@ -870,7 +877,7 @@ Loop, % objCurrentHeader.MaxIndex()
 	; ObjCSV_Format4CSV(strF4C [, strFieldDelimiter = ",", strEncapsulator = """"])
 	strFormat4Csv := ObjCSV_Format4CSV(objCurrentHeader[A_Index], strRealFieldDelimiter3, strFieldEncapsulator3)
 	strMultiPurpose := strMultiPurpose . strTemplateDelimiter . strFormat4Csv . strTemplateDelimiter . A_Space
-	; strFieldDelimiter3 et strFieldEncapsulator3 pour l'écriture
+	; strFieldDelimiter3 et strFieldEncapsulator3 pour l'ecriture
 }
 StringTrimRight, strMultiPurpose, strMultiPurpose, 1 ; remove extra delimiter
 GuiControl, 1:, strMultiPurpose, % StrEscape(strMultiPurpose)
@@ -897,8 +904,10 @@ return
 
 
 
+/*
 ChangedMultiPurpose:
 return
+*/
 
 
 
@@ -983,75 +992,26 @@ return
 
 
 ; --------------------- LISTVIEW EVENTS --------------------------
-
+;#### rendu ici à vérifier les strings
 
 ListViewEvents:
 if (A_GuiEvent = "ColClick")
 {
 	intColNumber := A_EventInfo
-	Menu, SortMenu, Add, % L(lLVeventsSortalphabetical), MenuSortText
-	Menu, SortMenu, Add, % L(lLVeventsSortnumericInteger), MenuSortInteger
-	Menu, SortMenu, Add, % L(lLVeventsSortnumericFloat), MenuSortFloat
-	Menu, SortMenu, Add
-	Menu, SortMenu, Add, % L(lLVeventsSortdescendingalphabetical), MenuSortDescText
-	Menu, SortMenu, Add, % L(lLVeventsSortdescendingnumericInteger), MenuSortDescInteger
-	Menu, SortMenu, Add, % L(lLVeventsSortdescendingnumericFloat), MenuSortDescFloat
+	Menu, SortMenu, Add, % L(lLvEventsSortalphabetical), MenuSortText
+	Menu, SortMenu, Add, % L(lLvEventsSortnumericInteger), MenuSortInteger
+	Menu, SortMenu, Add, % L(lLvEventsSortnumericFloat), MenuSortFloat
+	Menu, SortMenu, Add, % L(lLvEventsSortdescalphabetical), MenuSortDescText
+	Menu, SortMenu, Add, % L(lLvEventsSortdescnumericInteger), MenuSortDescInteger
+	Menu, SortMenu, Add, % L(lLvEventsSortdescnumericFloat), MenuSortDescFloat
 	Menu, SortMenu, Show
 }
 if (A_GuiEvent = "DoubleClick")
 {
 	intRowNumber := A_EventInfo
-	Gui, 1:Submit, NoHide
-	intGui1WinID := WinExist("A")
-	Gui, 2:New, +Resize , % L(lLVeventsEditrow, lAppName)
-	Gui, 2:+Owner1
-	Gui, 1:Default
-	SysGet, intMonWork, MonitorWorkArea 
-	intColWidth := 380
-	intEditWidth := intColWidth - 20
-	intMaxNbCol := Floor(intMonWorkRight / intColWidth)
-	intX := 10
-	intY := 5
-	intCol := 1
-	loop, % LV_GetCount("Column")
-	{
-		if ((intY + 100) > intMonWorkBottom)
-		{
-			if (intCol = 1)
-			{
-				Gui, 2:Add, Button, y%intY% x10 vbtnSaveRecord gButtonSaveRecord, % L(lLVeventsSave)
-				Gui, 2:Add, Button, yp x+5 vbtnCancel gButtonCancel, % L(lLVeventsCancel)
-			}
-			if (intCol = intMaxNbCol)
-			{
-				intYLabel := intY
-				Gui, 2:Add, Text, y%intYLabel% x%intX% vstrLabelMissing, % L(lLVeventsFieldsMissing)
-				break
-			}
-			intCol := intCol + 1
-			intX := intX + intColWidth
-			intY := 5
-		}
-		intYLabel := intY
-		intYEdit := intY + 15
-		LV_GetText(strColHeader, 0, A_Index)
-		LV_GetText(strColData, intRowNumber, A_Index)
-		Gui, 2:Add, Text, y%intYLabel% x%intX% vstrLabel%A_Index%, %strColHeader%
-		Gui, 2:Add, Edit, y%intYEdit% x%intX% w%intEditWidth% vstrEdit%A_Index% +HwndstrEditHandle, %strColData%
-		ShrinkEditControl(strEditHandle, 2, "2")
-		GuiControlGet, intPosEdit, 2:Pos, %strEditHandle%
-		intY := intY + intPosEditH + 19
-		intNbFieldsOnScreen := A_Index ; incremented at each occurence of the loop
-	}
-	if (intCol = 1)
-	{
-		Gui, 2:Add, Button, y%intY% x10 vbtnSaveRecord gButtonSaveRecord, % L(lLVeventsSave)
-		Gui, 2:Add, Button, yp x+5 vbtnCancel gButtonCancel, % L(lLVeventsCancel)
-	}
-	Gui, 2:Show, AutoSize Center
-	Gui, 1:+Disabled
+	Gosub, MenuEditRow
 }
-SB_SetText(L(lLVeventsrecordsselected, LV_GetCount("Selected")), 2)
+SB_SetText(L(lLvEventsrecordsselected, LV_GetCount("Selected")), 2)
 return
 
 
@@ -1074,11 +1034,16 @@ return
 
 
 GuiContextMenu:  ; Launched in response to a right-click or press of the Apps key.
-if A_GuiControl <> lvData  ; This check is optional. It displays the menu only for clicks inside the ListView.
+if A_GuiControl <> lvData  ; Display the menu only for clicks inside the ListView.
     return
-Menu, SelectMenu, Add, % L(lLVeventsSelectAll), MenuSelectAll
-Menu, SelectMenu, Add, % L(lLVeventsDeselectAll), MenuSelectNone
-Menu, SelectMenu, Add, % L(lLVeventsReverseSelection), MenuSelectReverse
+if !LV_GetCount("")
+	return
+intRowNumber := A_EventInfo
+Menu, SelectMenu, Add, % L(lLvEventsSelectAll), MenuSelectAll
+Menu, SelectMenu, Add, % L(lLvEventsDeselectAll), MenuSelectNone
+Menu, SelectMenu, Add, % L(lLvEventsReverseSelection), MenuSelectReverse
+Menu, SelectMenu, Add, % L(lLvEventsEditrowMenu), MenuEditRow
+Menu, SelectMenu, Add, % L(lLvEventsDeleteRowMenu), MenuDeleteRow
 ; Show the menu at the provided coordinates, A_GuiX and A_GuiY.  These should be used
 ; because they provide correct coordinates even if the user pressed the Apps key:
 Menu, SelectMenu, Show, %A_GuiX%, %A_GuiY%
@@ -1119,6 +1084,81 @@ IsRowSelected(intRow)
 	intNextSelectedRow := LV_GetNext(intRow - 1)
 	return (intNextSelectedRow = intRow)
 }
+
+
+
+MenuEditRow:
+Gui, 1:Submit, NoHide
+intGui1WinID := WinExist("A")
+Gui, 2:New, +Resize , % L(lLvEventsEditrow, lAppName)
+Gui, 2:+Owner1
+Gui, 1:Default
+SysGet, intMonWork, MonitorWorkArea 
+intColWidth := 380
+intEditWidth := intColWidth - 20
+intMaxNbCol := Floor(intMonWorkRight / intColWidth)
+intX := 10
+intY := 5
+intCol := 1
+loop, % LV_GetCount("Column")
+{
+	if ((intY + 100) > intMonWorkBottom)
+	{
+		if (intCol = 1)
+		{
+			Gui, 2:Add, Button, y%intY% x10 vbtnSaveRecord gButtonSaveRecord, % L(lLvEventsSave)
+			Gui, 2:Add, Button, yp x+5 vbtnCancel gButtonCancel, % L(lLvEventsCancel)
+		}
+		if (intCol = intMaxNbCol)
+		{
+			intYLabel := intY
+			Gui, 2:Add, Text, y%intYLabel% x%intX% vstrLabelMissing, % L(lLvEventsFieldsMissing)
+			break
+		}
+		intCol := intCol + 1
+		intX := intX + intColWidth
+		intY := 5
+	}
+	intYLabel := intY
+	intYEdit := intY + 15
+	LV_GetText(strColHeader, 0, A_Index)
+	LV_GetText(strColData, intRowNumber, A_Index)
+	Gui, 2:Add, Text, y%intYLabel% x%intX% vstrLabel%A_Index%, %strColHeader%
+	Gui, 2:Add, Edit, y%intYEdit% x%intX% w%intEditWidth% vstrEdit%A_Index% +HwndstrEditHandle, %strColData%
+	ShrinkEditControl(strEditHandle, 2, "2")
+	GuiControlGet, intPosEdit, 2:Pos, %strEditHandle%
+	intY := intY + intPosEditH + 19
+	intNbFieldsOnScreen := A_Index ; incremented at each occurence of the loop
+}
+if (intCol = 1)
+{
+	Gui, 2:Add, Button, y%intY% x10 vbtnSaveRecord gButtonSaveRecord, % L(lLvEventsSave)
+	Gui, 2:Add, Button, yp x+5 vbtnCancel gButtonCancel, % L(lLvEventsCancel)
+}
+Gui, 2:Show, AutoSize Center
+Gui, 1:+Disabled
+return
+
+
+
+MenuDeleteRow:
+intPrevNbRows := LV_GetCount()
+intRowNumber := 0 ; scan each selected row of the ListView
+GuiControl, -Redraw, lvData ; stop drawing the ListView during delete
+loop, % LV_GetCount("Selected")
+{
+	intRowNumber := LV_GetNext(intRowNumber) ; get next selected row number
+	LV_Delete(intRowNumber)
+	intRowNumber := intRowNumber - 1 ; continue searching from the row before the deleted row
+}
+GuiControl, +Redraw, lvData ; redraw the ListView
+intNewNbRows := LV_GetCount()
+intActualSize := Round(intActualSize * intNewNbRows / intPrevNbRows)
+if (intNewNbRows)
+	SB_SetText(L(lSBRecordsSize, intNewNbRows, intActualSize))
+else
+	SB_SetText(L(lSBEmpty), 1)
+return
 
 
 
@@ -1247,7 +1287,7 @@ if !DelimitersOK(3)
 ; ObjCSV_ListView2Collection([strGuiID = "", strListViewID = "", strFieldOrder = "", strFieldDelimiter = ","
 ;	, strEncapsulator = """", intProgressType = 0, strProgressText = ""])
 obj := ObjCSV_ListView2Collection("1", "lvData", , , , intProgressType, L(lTab0ReadingFromList))
-; strFieldDelimiter3 et strFieldEncapsulator3 pour l'écriture de l'entête seulement
+; strFieldDelimiter3 et strFieldEncapsulator3 pour l'ecriture de l'entete seulement
 strRealFieldDelimiter3 := StrMakeRealFieldDelimiter(strFieldDelimiter3)
 ; ObjCSV_ReturnDSVObjectArray(strCurrentDSVLine, strDelimiter = ",", strEncapsulator = """")
 objFieldsArray := ObjCSV_ReturnDSVObjectArray(StrUnEscape(strMultiPurpose), strRealFieldDelimiter3, strFieldEncapsulator3)
@@ -1361,14 +1401,14 @@ return
 
 
 
-; ####--------------------- FUNCTIONS --------------------------
+; --------------------- FUNCTIONS --------------------------
 
 
 CheckOneRow()
 {
 	if (LV_GetCount("Selected") = 1)
 	{
-		MsgBox, 35, % L(lLVeventsOnerecordselectedTitle, lAppName), % L(lLVeventsOnerecordselectedMessage)
+		MsgBox, 35, % L(lLvEventsOnerecordselectedTitle, lAppName), % L(lLvEventsOnerecordselectedMessage)
 		IfMsgBox, No
 		{
 			GuiControl, Focus, lvData
@@ -1399,12 +1439,13 @@ GetListViewHeader(strRealFieldDelimiter, strFieldEncapsulator)
 
 StrEscape(strEscaped)
 {
-	StringReplace, strEscaped, strEscaped, ``, £¡ƒ†, All ; temporary string replacement for escape char
+	strReplacement := Chr(131) . Chr(161) . Chr(134) ; temporary string replacement for escape char
+	StringReplace, strEscaped, strEscaped, ``, %strReplacement%, All
 	StringReplace, strEscaped, strEscaped, `t, ``t, All ; Tab (HT)
 	StringReplace, strEscaped, strEscaped, `n, ``n, All ; Linefeed (LF)
 	StringReplace, strEscaped, strEscaped, `r, ``r, All ; Carriage return (CR)
 	StringReplace, strEscaped, strEscaped, `f, ``f, All ; Form feed (FF)
-	StringReplace, strEscaped, strEscaped, £¡ƒ†, ````, All ; from temporary string to escape char
+	StringReplace, strEscaped, strEscaped, %strReplacement%, ````, All
 	return strEscaped
 }
 
@@ -1412,12 +1453,13 @@ StrEscape(strEscaped)
 
 StrUnEscape(strUnEscaped)
 {
-	StringReplace, strUnEscaped, strUnEscaped, ````, £¡ƒ†, All ; temporary string replacement for escape char
+	strReplacement := Chr(131) . Chr(161) . Chr(134) ; temporary string replacement for escape char
+	StringReplace, strUnEscaped, strUnEscaped, ````, %strReplacement%, All
 	StringReplace, strUnEscaped, strUnEscaped, ``t, `t, All ; Tab (HT)
 	StringReplace, strUnEscaped, strUnEscaped, ``n, `n, All ; Linefeed (LF)
 	StringReplace, strUnEscaped, strUnEscaped, ``r, `r, All ; Carriage return (CR)
 	StringReplace, strUnEscaped, strUnEscaped, ``f, `f, All ; Form feed (FF)
-	StringReplace, strUnEscaped, strUnEscaped, £¡ƒ†, ``, All ; from temporary string to escape char
+	StringReplace, strUnEscaped, strUnEscaped, %strReplacement%, ``, All
 	return strUnEscaped
 }
 
@@ -1473,15 +1515,7 @@ CheckIfFileExistOverwrite(strFileName)
 		return True
 	else
 	{
-		MsgBox, 35, %lAppName% - File exists, 
-		(
-		File exists:`n%strFileName%
-		
-		Do you want to overwrite this file?
-		
-		Yes: The file will be overwritten.
-		No: Data will be added to the existing file.
-		)
+		MsgBox, 35, % L(lFuncIfFileExistTitle, lAppName), L(lFuncIfFileExistMessage, strFileName)
 		IfMsgBox, Yes
 			return True
 		IfMsgBox, No
@@ -1536,7 +1570,7 @@ DelimitersOK(intTab)
 {
 	if (strFieldDelimiter%intTab% = strFieldEncapsulator%intTab%) or (strFieldDelimiter%intTab% = "") or (strFieldEncapsulator%intTab% = "")
 	{
-		Oops("Field delimiter and field encapsulator in tab " . intTab . " cannot be the same character and cannot be empty.")
+		Oops(lFuncDelimitersOK, intTab)
 		GuiControl, 1:Choose, tabCSVBuddy, %intTab%
 		if (strFieldDelimiter%intTab% = strFieldEncapsulator%intTab%) or (strFieldDelimiter%intTab% = "")
 			GuiControl, Focus, strFieldDelimiter%intTab%
@@ -1580,7 +1614,7 @@ Help(strMessage, objVariables*)
 	Gui, 1:+OwnDialogs 
 	StringLeft, strTitle, strMessage, % InStr(strMessage, "$") - 1
 	StringReplace, strMessage, strMessage, %strTitle%$
-	MsgBox, 0, % L("~1~ (~2~) - ~3~ Help", lAppName, lAppVersion, strTitle), % L(strMessage, objVariables*)
+	MsgBox, 0, % L(lFuncHelpTitle, lAppName, lAppVersion, strTitle), % L(strMessage, objVariables*)
 }
 
 
@@ -1588,7 +1622,7 @@ Help(strMessage, objVariables*)
 Oops(strMessage, objVariables*)
 {
 	Gui, 1:+OwnDialogs
-	MsgBox, 48, %lAppName% (%lAppVersion%), % L(strMessage, objVariables*)
+	MsgBox, 48, % L(lFuncOopsTitle, lAppName, lAppVersion), % L(strMessage, objVariables*)
 }
 
 
