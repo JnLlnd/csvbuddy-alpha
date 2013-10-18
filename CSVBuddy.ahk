@@ -61,7 +61,7 @@ Gui, 1:Add, Text,		xp		x+27	vlblFieldDelimiter1, % L(lTab1Fielddelimiter)
 Gui, 1:Add, Edit,		yp		x+5		vstrFieldDelimiter1 w20 limit1 center, `, ; gChangedFieldDelimiter1 unused
 Gui, 1:Add, Button,		yp		x+5		vbtnHelpFieldDelimiter1 gButtonHelpFieldDelimiter1, % L(lTab0QuestionMark)
 Gui, 1:Add, Text,		yp		x+27	vlblFieldEncapsulator1, % L(lTab1Fieldencapsulator)
-Gui, 1:Add, Edit,		yp		x+5		vstrFieldEncapsulator1 w20 limit1 center, `" ; gChangedFieldEncapsulator1  unused
+Gui, 1:Add, Edit,		yp		x+5		vstrFieldEncapsulator1 w20 limit1 center, `" ; gChangedFieldEncapsulator1 unused
 Gui, 1:Add, Button,		yp		x+5		vbtnHelpEncapsulator1 gButtonHelpEncapsulator1, % L(lTab0QuestionMark)
 Gui, 1:Add, Checkbox,	yp		x+27	vblnMultiline1 gChangedMultiline1, % L(lTab1Multilinefields)
 Gui, 1:Add, Button,		yp		x+0		vbtnHelpMultiline1 gButtonHelpMultiline1, % L(lTab0QuestionMark)
@@ -117,11 +117,11 @@ Gui, 1:Add, Radio,		yp		x+15	vradXML gClickRadXML, % L(lTab4XML)
 Gui, 1:Add, Radio,		yp		x+15	vradExpress gClickRadExpress, % L(lTab4Express)
 Gui, 1:Add, Button,		yp		x+15	vbtnHelpExportFormat gButtonHelpExportFormat, % L(lTab0QuestionMark)
 Gui, 1:Add, Button,		yp		x+15	vbtnHelpExportMulti gButtonHelpExportMulti Hidden
-	, Lorem ipsum dolor sitm ; conserver texte important pour la largeur du bouton
+	, Lorem ipsum dolor sitm ; keep this lorem text to reserve width for the button
 Gui, 1:Add, Text,		y+10	x10		vlblMultiPurpose w85 right hidden, Hidden Label:
 Gui, 1:Add, Edit,		yp		x100	vstrMultiPurpose hidden ; gChangedMultiPurpose unused
 Gui, 1:Add, Button,		yp		x+5		vbtnMultiPurpose gButtonMultiPurpose hidden
-	, Lorem ipsum dolor sitm ; conserver texte important pour la largeur du bouton
+	, Lorem ipsum dolor sitm ; keep this lorem text to reserve width for the button
 Gui, 1:Add, Button,		y105	x+5		vbtnExportFile gButtonExportFile hidden, % L(lTab4Export)
 Gui, 1:Add, Button,		y137	x+5		vbtnCheckExportFile gButtonCheckExportFile hidden, % L(lTab4Check)
 
@@ -182,10 +182,6 @@ else if InStr(tabCSVBuddy, L(lTab0Export))
 		Oops(lTab0FirstloadaCSVfile)
 		GuiControl, 1:Choose, tabCSVBuddy, 1
 	}
-else if InStr(tabCSVBuddy, L(lTab0About))
-{
-	; do nothing
-}
 return
 
 
@@ -816,7 +812,7 @@ Loop, % objCurrentHeader.MaxIndex()
 	; ObjCSV_Format4CSV(strF4C [, strFieldDelimiter = ",", strEncapsulator = """"])
 	strFormat4Csv := ObjCSV_Format4CSV(objCurrentHeader[A_Index], strRealFieldDelimiter3, strFieldEncapsulator3)
 	strMultiPurpose := strMultiPurpose . strFormat4Csv . strRealFieldDelimiter3 . intDefaultWidth . strRealFieldDelimiter3
-	; strFieldDelimiter3 et strFieldEncapsulator3 pour l'ecriture
+	; strFieldDelimiter3 and strFieldEncapsulator3 for file writing
 }
 StringTrimRight, strMultiPurpose, strMultiPurpose, 1 ; remove extra delimiter
 GuiControl, 1:, strMultiPurpose, % StrEscape(strMultiPurpose)
@@ -869,7 +865,7 @@ GuiControl, 1:Hide, btnMultiPurpose
 GuiControl, 1:, strFileToExport, % NewFileName(strFileToLoad, "-EXPORT", "txt")
 ; ObjCSV_ReturnDSVObjectArray(strCurrentDSVLine, strDelimiter = ",", strEncapsulator = """")
 objCurrentHeader := ObjCSV_ReturnDSVObjectArray(strCurrentHeader, strCurrentFieldDelimiter, strCurrentFieldEncapsulator)
-; strCurrentFieldDelimiter et strCurrentFieldEncapsulator pour la lecture de strCurrentHeader
+; strCurrentFieldDelimiter and strCurrentFieldEncapsulator for file reading of strCurrentHeader
 strRealFieldDelimiter3 := StrMakeRealFieldDelimiter(strFieldDelimiter3)
 strMultiPurpose := ""
 Loop, % objCurrentHeader.MaxIndex()
@@ -877,7 +873,7 @@ Loop, % objCurrentHeader.MaxIndex()
 	; ObjCSV_Format4CSV(strF4C [, strFieldDelimiter = ",", strEncapsulator = """"])
 	strFormat4Csv := ObjCSV_Format4CSV(objCurrentHeader[A_Index], strRealFieldDelimiter3, strFieldEncapsulator3)
 	strMultiPurpose := strMultiPurpose . strTemplateDelimiter . strFormat4Csv . strTemplateDelimiter . A_Space
-	; strFieldDelimiter3 et strFieldEncapsulator3 pour l'ecriture
+	; strFieldDelimiter3 and strFieldEncapsulator3 for file writing
 }
 StringTrimRight, strMultiPurpose, strMultiPurpose, 1 ; remove extra delimiter
 GuiControl, 1:, strMultiPurpose, % StrEscape(strMultiPurpose)
@@ -992,7 +988,7 @@ return
 
 
 ; --------------------- LISTVIEW EVENTS --------------------------
-;#### rendu ici à vérifier les strings
+
 
 ListViewEvents:
 if (A_GuiEvent = "ColClick")
@@ -1033,7 +1029,7 @@ return
 
 
 
-GuiContextMenu:  ; Launched in response to a right-click or press of the Apps key.
+GuiContextMenu: ; Launched in response to a right-click or press of the Apps key.
 if A_GuiControl <> lvData  ; Display the menu only for clicks inside the ListView.
     return
 if !LV_GetCount("")
@@ -1244,14 +1240,13 @@ return
 
 
 
-2GuiSize:  ; Expand or shrink the ListView in response to the user's resizing of the window.
-; ###_D("intNbFieldsOnScreen: " . intNbFieldsOnScreen . " / intWidthSize: " . intWidthSize)
+2GuiSize: ; Expand or shrink the ListView in response to the user's resizing of the window.
 if A_EventInfo = 1  ; The window has been minimized.  No action needed.
     return
 ; MsgBox, A_GuiWidth: %A_GuiWidth% / intCol: %intCol%
 GuiControl, 2:Move, btnSaveRecord, % "X" . (A_GuiWidth - 100)
 GuiControl, 2:Move, btnCancel, % "X" . (A_GuiWidth - 50)
-if intCol > 1  ; The window has been minimized.  No action needed.
+if intCol > 1 ; The window has been minimized.  No action needed.
     return
 intWidthSize := A_GuiWidth - 20
 Loop, %intNbFieldsOnScreen%
@@ -1338,7 +1333,7 @@ obj := ObjCSV_ListView2Collection("1", "lvData", , , , intProgressType, L(lTab0R
 ObjCSV_Collection2HTML(obj, strFileToExport, strMultiPurpose, strTemplateDelimiter
 	, intProgressType, blnOverwrite, L(lExportSaving))
 if (ErrorLevel)
-	Oops(lExportHTMLUnknownerror)
+	Oops(lExportUnknownerror)
 if FileExist(strFileToExport)
 {
 	GuiControl, 1:Show, btnCheckExportFile
@@ -1515,7 +1510,7 @@ CheckIfFileExistOverwrite(strFileName)
 		return True
 	else
 	{
-		MsgBox, 35, % L(lFuncIfFileExistTitle, lAppName), L(lFuncIfFileExistMessage, strFileName)
+		MsgBox, 35, % L(lFuncIfFileExistTitle, lAppName), % L(lFuncIfFileExistMessage, strFileName)
 		IfMsgBox, Yes
 			return True
 		IfMsgBox, No
